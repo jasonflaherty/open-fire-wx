@@ -31,6 +31,9 @@ importers:
       '@openfirewx/plugin-fire-perimeters':
         specifier: workspace:*
         version: link:../../plugins/fire-perimeters
+      '@openfirewx/plugin-firms-hotspots':
+        specifier: workspace:*
+        version: link:../../plugins/firms-hotspots
       '@openfirewx/plugin-noaa-weather':
         specifier: workspace:*
         version: link:../../plugins/noaa-weather
@@ -151,6 +154,25 @@ importers:
         version: 5.9.3
 
   plugins/fire-perimeters:
+    dependencies:
+      '@openfirewx/fire':
+        specifier: workspace:*
+        version: link:../../packages/fire
+      '@openfirewx/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      leaflet:
+        specifier: ^1.9.4
+        version: 1.9.4
+    devDependencies:
+      '@types/leaflet':
+        specifier: ^1.9.15
+        version: 1.9.21
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  plugins/firms-hotspots:
     dependencies:
       '@openfirewx/fire':
         specifier: workspace:*

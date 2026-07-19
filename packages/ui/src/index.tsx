@@ -20,7 +20,7 @@ export function Brand({
 export type LayerToggleProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   label: string;
   active: boolean;
-  tone?: 'fire' | 'weather';
+  tone?: 'fire' | 'weather' | 'hotspot';
 };
 
 export function LayerToggle({

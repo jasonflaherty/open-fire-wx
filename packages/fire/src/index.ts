@@ -156,3 +156,150 @@ export async function fetchFirePerimeters(options?: {
 
 /** @deprecated use NIFC_PERIMETERS_QUERY */
 export const NIFC_PERIMETERS_URL = nifcPageUrl(0, 2000);
+
+/* -------------------------------------------------------------------------- */
+/* NASA FIRMS / VIIRS hotspots (Living Atlas — no API key)                    */
+/* -------------------------------------------------------------------------- */
+
+export type HotspotProperties = {
+  frp?: number;
+  confidence?: string;
+  brightness?: number;
+  satellite?: string;
+  hoursOld?: number;
+  acquired?: string | number;
+};
+
+export type HotspotFeature = {
+  type: 'Feature';
+  geometry: { type: 'Point'; coordinates: [number, number] };
+  properties: HotspotProperties;
+};
+
+export type HotspotCollection = {
+  type: 'FeatureCollection';
+  features: HotspotFeature[];
+  generatedAt?: string;
+  source?: string;
+};
+
+/** Esri Living Atlas VIIRS thermal hotspots (FIRMS-derived). */
+export const VIIRS_HOTSPOTS_QUERY =
+  'https://services9.arcgis.com/RHVPKKiFTONKtxq3/arcgis/rest/services/Satellite_VIIRS_Thermal_Hotspots_and_Fire_Activity/FeatureServer/0/query';
+
+const CONUS_BBOX = '-125,24,-66,50';
+
+function viirsPageUrl(offset: number, pageSize: number, maxHoursOld: number): string {
+  const params = new URLSearchParams({
+    where: `hours_old<${maxHoursOld}`,
+    geometry: CONUS_BBOX,
+    geometryType: 'esriGeometryEnvelope',
+    inSR: '4326',
+    spatialRel: 'esriSpatialRelIntersects',
+    outFields: 'latitude,longitude,bright_ti4,frp,confidence,acq_date,acq_time,satellite,hours_old',
+    returnGeometry: 'true',
+    outSR: '4326',
+    f: 'geojson',
+    resultOffset: String(offset),
+    resultRecordCount: String(pageSize),
+  });
+  return `${VIIRS_HOTSPOTS_QUERY}?${params.toString()}`;
+}
+
+function normalizeHotspot(raw: Record<string, unknown>): HotspotFeature | null {
+  const geometry = raw.geometry as HotspotFeature['geometry'] | undefined;
+  const props = (raw.properties ?? {}) as Record<string, unknown>;
+  let coordinates = geometry?.coordinates;
+  if (!coordinates) {
+    const lon = Number(props.longitude);
+    const lat = Number(props.latitude);
+    if (!Number.isFinite(lon) || !Number.isFinite(lat)) return null;
+    coordinates = [lon, lat];
+  }
+  return {
+    type: 'Feature',
+    geometry: { type: 'Point', coordinates: coordinates as [number, number] },
+    properties: {
+      frp: Number(props.frp ?? NaN) || undefined,
+      confidence: props.confidence != null ? String(props.confidence) : undefined,
+      brightness: Number(props.bright_ti4 ?? props.brightness ?? NaN) || undefined,
+      satellite: props.satellite != null ? String(props.satellite) : undefined,
+      hoursOld: Number(props.hours_old ?? NaN) || undefined,
+      acquired: (props.acq_date as string | number | undefined) ?? undefined,
+    },
+  };
+}
+
+export async function fetchLiveHotspots(options?: {
+  maxHoursOld?: number;
+  maxFeatures?: number;
+}): Promise<HotspotCollection> {
+  const maxHoursOld = options?.maxHoursOld ?? 24;
+  const maxFeatures = options?.maxFeatures ?? 5000;
+  const pageSize = 500;
+  const features: HotspotFeature[] = [];
+  let offset = 0;
+
+  for (;;) {
+    const res = await fetch(viirsPageUrl(offset, pageSize, maxHoursOld));
+    if (!res.ok) {
+      throw new Error(`Failed to fetch VIIRS hotspots (${res.status})`);
+    }
+    const data = (await res.json()) as {
+      features?: Array<Record<string, unknown>>;
+      properties?: { exceededTransferLimit?: boolean };
+      error?: unknown;
+    };
+    if (isArcGisError(data)) {
+      throw new Error('VIIRS hotspot query failed');
+    }
+    const page = (data.features ?? [])
+      .map(normalizeHotspot)
+      .filter((f): f is HotspotFeature => f !== null);
+    features.push(...page);
+    if (features.length >= maxFeatures) {
+      features.length = maxFeatures;
+      break;
+    }
+    if (!data.properties?.exceededTransferLimit || page.length === 0) break;
+    offset += pageSize;
+  }
+
+  return {
+    type: 'FeatureCollection',
+    features,
+    generatedAt: new Date().toISOString(),
+    source: 'NASA FIRMS / VIIRS (Living Atlas)',
+  };
+}
+
+export async function fetchHotspots(options?: {
+  staticUrl?: string;
+  preferLive?: boolean;
+}): Promise<HotspotCollection> {
+  const preferLive = options?.preferLive ?? true;
+  const tryStatic = async (): Promise<HotspotCollection | null> => {
+    if (!options?.staticUrl) return null;
+    try {
+      const res = await fetch(options.staticUrl);
+      if (!res.ok) return null;
+      const data = (await res.json()) as HotspotCollection;
+      if (data?.type !== 'FeatureCollection' || !data.features?.length) return null;
+      return data;
+    } catch {
+      return null;
+    }
+  };
+
+  if (preferLive) {
+    try {
+      return await fetchLiveHotspots();
+    } catch {
+      const cached = await tryStatic();
+      if (cached) return cached;
+      throw new Error('Unable to load hotspots');
+    }
+  }
+
+  return (await tryStatic()) ?? fetchLiveHotspots();
+}

@@ -14,6 +14,7 @@
     "@openfirewx/design-system": "workspace:*",
     "@openfirewx/map": "workspace:*",
     "@openfirewx/plugin-fire-perimeters": "workspace:*",
+    "@openfirewx/plugin-firms-hotspots": "workspace:*",
     "@openfirewx/plugin-noaa-weather": "workspace:*",
     "@openfirewx/shared": "workspace:*",
     "@openfirewx/ui": "workspace:*",

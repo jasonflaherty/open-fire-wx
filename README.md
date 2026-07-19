@@ -13,7 +13,7 @@ Every screen answers one question. The first screen answers: **Where are the fir
 - **Simple** — no clutter, no hidden menus
 - **Beautiful** — inspired by Apple Weather, Windy, FlightRadar24
 
-Read the [design philosophy](apps/docs/DESIGN_PHILOSOPHY.md).
+Read the [design philosophy](apps/docs/DESIGN_PHILOSOPHY.md) and [data sources](apps/docs/DATA_SOURCES.md).
 
 ## Quick start
 
@@ -25,8 +25,8 @@ pnpm dev
 Open http://localhost:3000
 
 ```bash
-pnpm build          # static export → apps/web/out
-pnpm refresh-data   # fetch NIFC perimeters → public/data/fires.json
+pnpm build             # static export → apps/web/out
+pnpm refresh-data      # NIFC perimeters + VIIRS hotspots → public/data/
 pnpm typecheck
 ```
 
@@ -45,7 +45,7 @@ examples/         Example plugin skeleton
 
 ## Plugins
 
-Layers are plugins. Each defines `name`, `icon`, `layer`, optional `cache`, `settings`, and `legend`. The map host loads enabled plugins — see [`plugins/fire-perimeters`](plugins/fire-perimeters) and [`examples/example-plugin`](examples/example-plugin).
+Layers are plugins. Each defines `name`, `icon`, `layer`, optional `cache`, `settings`, and `legend`. The map host loads enabled plugins — see [`plugins/fire-perimeters`](plugins/fire-perimeters), [`plugins/firms-hotspots`](plugins/firms-hotspots), and [`examples/example-plugin`](examples/example-plugin).
 
 ## GitHub Pages
 

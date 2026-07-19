@@ -15,6 +15,7 @@ const nextConfig = {
     '@openfirewx/fire',
     '@openfirewx/weather',
     '@openfirewx/plugin-fire-perimeters',
+    '@openfirewx/plugin-firms-hotspots',
     '@openfirewx/plugin-noaa-weather',
   ],
   env: {

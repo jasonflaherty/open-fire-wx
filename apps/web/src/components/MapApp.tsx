@@ -19,12 +19,17 @@ export function MapApp() {
   useEffect(() => {
     let cancelled = false;
     void (async () => {
-      const [{ firePerimetersPlugin }, { noaaWeatherPlugin }] = await Promise.all([
+      const [
+        { firePerimetersPlugin },
+        { firmsHotspotsPlugin },
+        { noaaWeatherPlugin },
+      ] = await Promise.all([
         import('@openfirewx/plugin-fire-perimeters'),
+        import('@openfirewx/plugin-firms-hotspots'),
         import('@openfirewx/plugin-noaa-weather'),
       ]);
       if (cancelled) return;
-      const list = [firePerimetersPlugin, noaaWeatherPlugin];
+      const list = [firePerimetersPlugin, firmsHotspotsPlugin, noaaWeatherPlugin];
       setPlugins(list);
       setEnabled(list.filter((p) => p.enabledByDefault).map((p) => p.id));
       setReady(true);
@@ -55,7 +60,7 @@ export function MapApp() {
       <header className="chrome">
         <div className="chrome__panel">
           <Brand />
-          <StatusText>NIFC live perimeters · dark basemap</StatusText>
+          <StatusText>NIFC perimeters · FIRMS heat · dark basemap</StatusText>
         </div>
         <div className="chrome__panel chrome__controls">
           <ControlStrip>
@@ -64,6 +69,12 @@ export function MapApp() {
               active={enabled.includes('fire-perimeters')}
               tone="fire"
               onClick={() => toggle('fire-perimeters')}
+            />
+            <LayerToggle
+              label="Heat"
+              active={enabled.includes('firms-hotspots')}
+              tone="hotspot"
+              onClick={() => toggle('firms-hotspots')}
             />
             <LayerToggle
               label="Radar"
