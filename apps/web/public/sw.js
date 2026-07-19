@@ -1,4 +1,4 @@
-/* Data dumps expire hourly; shell stays network/cache hybrid */
+/* Client data cache expires hourly; static dumps refresh daily in CI */
 const CACHE = 'ofwx-v4';
 const DATA_MAX_AGE_MS = 60 * 60 * 1000;
 const SHELL = ['./', './manifest.webmanifest', './icon.svg'];
@@ -58,7 +58,7 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       (async () => {
         try {
-          // Bypass HTTP caches so reloads can see hourly-refreshed dumps
+          // Bypass HTTP caches so reloads can see fresh dumps
           const response = await fetch(request, { cache: 'no-store' });
           if (response.ok) {
             await putTimedResponse(request, response);

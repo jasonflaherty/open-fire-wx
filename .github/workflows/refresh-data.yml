@@ -2,8 +2,8 @@ name: Refresh fire data
 
 on:
   schedule:
-    # Refresh static data dumps every hour so Pages stays fresh
-    - cron: '0 * * * *'
+    # Daily static dumps — live NIFC/VIIRS stay fresh in the browser
+    - cron: '0 15 * * *'
   workflow_dispatch:
 
 permissions:

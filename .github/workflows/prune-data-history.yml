@@ -1,0 +1,56 @@
+name: Prune data dump history
+
+# Rewrites git history to drop prior versions of the large static JSON dumps,
+# then restores the current files. Caps repo growth from daily refresh commits.
+# Requires force-push to main — disable branch protection for this bot, or run
+# workflow_dispatch with a PAT that can force-push.
+
+on:
+  schedule:
+    # Every 3 days (after daily refresh window)
+    - cron: '30 15 */3 * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install git-filter-repo
+        run: pip install git-filter-repo
+
+      - name: Strip historical data dumps and restore current files
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          DATA_DIR=apps/web/public/data
+          TMP=$(mktemp -d)
+          cp "$DATA_DIR/fires.json" "$TMP/"
+          cp "$DATA_DIR/hotspots.json" "$TMP/"
+
+          # Drop every historical blob for these paths (keeps other history intact)
+          git filter-repo --force \
+            --path "$DATA_DIR/fires.json" \
+            --path "$DATA_DIR/hotspots.json" \
+            --invert-paths
+
+          mkdir -p "$DATA_DIR"
+          cp "$TMP/fires.json" "$DATA_DIR/"
+          cp "$TMP/hotspots.json" "$DATA_DIR/"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add "$DATA_DIR/fires.json" "$DATA_DIR/hotspots.json"
+          git commit -m "chore: restore data dumps after history prune"
+
+          # filter-repo removes remotes; re-add and force-push rewritten history
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push --force origin HEAD:main
