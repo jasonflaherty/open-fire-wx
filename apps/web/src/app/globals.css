@@ -11,10 +11,13 @@ body {
   height: 100%;
   background: var(--color-base);
   color: var(--color-text);
+  overflow: hidden;
+  overscroll-behavior: none;
 }
 
 body {
   min-height: 100dvh;
+  min-height: 100svh;
 }
 
 a {
@@ -25,6 +28,7 @@ a {
   position: relative;
   width: 100%;
   height: 100dvh;
+  height: 100svh;
   overflow: hidden;
 }
 
@@ -41,26 +45,56 @@ a {
   height: 100%;
   background: var(--color-base);
   font-family: var(--font-body);
+  font-size: 11px;
+}
+
+/* Keep Leaflet chrome clear of our controls */
+.map-root .leaflet-bottom.leaflet-right {
+  margin-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
 }
 
 .chrome {
   position: absolute;
   z-index: 500;
-  left: var(--space-3);
-  top: var(--space-3);
-  max-width: calc(100% - 2 * var(--space-3));
+  left: max(var(--space-3), env(safe-area-inset-left, 0px));
+  right: auto;
+  top: max(var(--space-3), env(safe-area-inset-top, 0px));
+  max-width: min(36rem, calc(100% - 2 * max(var(--space-3), env(safe-area-inset-left, 0px))));
   display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: 0.35rem 0.4rem 0.35rem 0.75rem;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.4rem 0.45rem 0.4rem 0.7rem;
   background: var(--color-overlay);
   backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-control);
   pointer-events: auto;
   animation: rise 380ms ease both;
+}
+
+.chrome__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.chrome__layers {
+  min-width: 0;
+  max-width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  mask-image: linear-gradient(90deg, #000 0%, #000 calc(100% - 1.25rem), transparent 100%);
+}
+
+.chrome__layers::-webkit-scrollbar {
+  display: none;
 }
 
 @keyframes rise {
@@ -77,21 +111,27 @@ a {
 .locate-wrap {
   position: absolute;
   z-index: 500;
-  right: var(--space-3);
+  right: max(var(--space-3), env(safe-area-inset-right, 0px));
   bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
   animation: rise 420ms ease both;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 720px) {
   .chrome {
-    left: var(--space-2);
-    right: var(--space-2);
-    top: var(--space-2);
-    justify-content: space-between;
+    left: max(0.5rem, env(safe-area-inset-left, 0px));
+    right: max(0.5rem, env(safe-area-inset-right, 0px));
+    top: max(0.5rem, env(safe-area-inset-top, 0px));
+    max-width: none;
+    width: auto;
   }
 
-  .locate-wrap {
-    right: var(--space-2);
-    bottom: calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
+  .chrome__layers {
+    padding-bottom: 0.1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .chrome {
+    padding: 0.35rem 0.35rem 0.4rem 0.55rem;
   }
 }

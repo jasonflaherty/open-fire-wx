@@ -188,8 +188,15 @@ export function MapApp() {
         <div className="map-root" aria-busy="true" />
       )}
       <header className="chrome" aria-label="Map controls">
-        <Brand name="Fire WX" tagline={undefined} />
-        <ControlStrip>
+        <div className="chrome__bar">
+          <Brand name="Fire WX" tagline={undefined} />
+          <StateSelect
+            value={stateCode}
+            options={US_STATE_VIEWS}
+            onChange={onStateChange}
+          />
+        </div>
+        <ControlStrip className="chrome__layers">
           {LAYERS.map((layer) => (
             <LayerToggle
               key={layer.id}
@@ -200,11 +207,6 @@ export function MapApp() {
             />
           ))}
         </ControlStrip>
-        <StateSelect
-          value={stateCode}
-          options={US_STATE_VIEWS}
-          onChange={onStateChange}
-        />
       </header>
       <div className="locate-wrap">
         <LocateButton locating={locating} onClick={() => void locateMe()} />

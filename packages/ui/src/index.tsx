@@ -43,10 +43,15 @@ export function LayerToggle({
 
 export type ControlStripProps = {
   children: ReactNode;
+  className?: string;
 };
 
-export function ControlStrip({ children }: ControlStripProps) {
-  return <div className="ofwx-control-strip">{children}</div>;
+export function ControlStrip({ children, className }: ControlStripProps) {
+  return (
+    <div className={['ofwx-control-strip', className].filter(Boolean).join(' ')}>
+      {children}
+    </div>
+  );
 }
 
 export function StatusText({ children }: { children: ReactNode }) {
