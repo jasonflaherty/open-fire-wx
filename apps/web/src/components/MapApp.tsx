@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { Brand, ControlStrip, LayerToggle } from '@openfirewx/ui';
+import { Brand, ControlStrip, LayerToggle, LocateButton } from '@openfirewx/ui';
 import type { LayerPlugin } from '@openfirewx/shared';
+import type { CircleMarker, Map as LeafletMap } from 'leaflet';
 
 const FireMap = dynamic(
   () => import('@openfirewx/map').then((m) => m.FireMap),
@@ -20,6 +21,9 @@ export function MapApp() {
   const [plugins, setPlugins] = useState<LayerPlugin[]>([]);
   const [enabled, setEnabled] = useState<string[]>([]);
   const [ready, setReady] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const mapRef = useRef<LeafletMap | null>(null);
+  const markerRef = useRef<CircleMarker | null>(null);
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
 
   useEffect(() => {
@@ -45,10 +49,62 @@ export function MapApp() {
     };
   }, []);
 
+  useEffect(() => {
+    return () => {
+      markerRef.current?.remove();
+      markerRef.current = null;
+    };
+  }, []);
+
+  const onMapReady = useCallback((map: LeafletMap) => {
+    mapRef.current = map;
+  }, []);
+
   function toggle(id: string) {
     setEnabled((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
+  }
+
+  async function locateMe() {
+    const map = mapRef.current;
+    if (!map || locating) return;
+    if (!navigator.geolocation) {
+      window.alert('Location is not available in this browser.');
+      return;
+    }
+
+    setLocating(true);
+    const L = (await import('leaflet')).default;
+
+    map.once('locationfound', (event) => {
+      const { lat, lng } = event.latlng;
+      map.flyTo([lat, lng], Math.max(map.getZoom(), 11), { duration: 0.8 });
+
+      markerRef.current?.remove();
+      markerRef.current = L.circleMarker([lat, lng], {
+        radius: 8,
+        color: '#3a86ff',
+        fillColor: '#3a86ff',
+        fillOpacity: 0.85,
+        weight: 2,
+      })
+        .bindPopup('You are here')
+        .addTo(map);
+
+      setLocating(false);
+    });
+
+    map.once('locationerror', () => {
+      setLocating(false);
+      window.alert('Could not find your location. Check browser permissions.');
+    });
+
+    map.locate({
+      enableHighAccuracy: true,
+      timeout: 12000,
+      maximumAge: 30_000,
+    });
   }
 
   return (
@@ -59,6 +115,7 @@ export function MapApp() {
           plugins={plugins}
           enabledPluginIds={enabled}
           basePath={basePath || ''}
+          onMapReady={onMapReady}
         />
       ) : (
         <div className="map-root" aria-busy="true" />
@@ -77,6 +134,9 @@ export function MapApp() {
           ))}
         </ControlStrip>
       </header>
+      <div className="locate-wrap">
+        <LocateButton locating={locating} onClick={() => void locateMe()} />
+      </div>
     </div>
   );
 }

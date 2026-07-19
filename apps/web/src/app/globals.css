@@ -72,11 +72,24 @@ a {
   }
 }
 
+.locate-wrap {
+  position: absolute;
+  z-index: 500;
+  right: var(--space-3);
+  bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+  animation: rise 420ms ease both;
+}
+
 @media (max-width: 640px) {
   .chrome {
     left: var(--space-2);
     right: var(--space-2);
     top: var(--space-2);
     justify-content: space-between;
+  }
+
+  .locate-wrap {
+    right: var(--space-2);
+    bottom: calc(var(--space-2) + env(safe-area-inset-bottom, 0px));
   }
 }

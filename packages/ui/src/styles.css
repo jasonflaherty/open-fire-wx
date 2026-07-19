@@ -91,3 +91,57 @@
   font-size: 0.75rem;
   color: var(--color-text-muted);
 }
+
+.ofwx-locate {
+  appearance: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-overlay);
+  backdrop-filter: blur(14px);
+  color: var(--color-text);
+  box-shadow: var(--shadow-control);
+  cursor: pointer;
+  transition:
+    color var(--transition-fast),
+    background var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.ofwx-locate:hover {
+  border-color: rgba(247, 248, 249, 0.28);
+  background: var(--color-base-elevated);
+}
+
+.ofwx-locate:focus-visible {
+  outline: 2px solid var(--color-warning);
+  outline-offset: 2px;
+}
+
+.ofwx-locate[data-locating='true'] {
+  color: var(--color-weather);
+}
+
+.ofwx-locate[data-locating='true'] .ofwx-locate__icon {
+  animation: ofwx-pulse 1s ease infinite;
+}
+
+.ofwx-locate__icon {
+  display: block;
+}
+
+@keyframes ofwx-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.92);
+  }
+}

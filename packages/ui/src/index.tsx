@@ -52,3 +52,45 @@ export function ControlStrip({ children }: ControlStripProps) {
 export function StatusText({ children }: { children: ReactNode }) {
   return <p className="ofwx-status">{children}</p>;
 }
+
+export type LocateButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  locating?: boolean;
+};
+
+export function LocateButton({ locating = false, ...rest }: LocateButtonProps) {
+  return (
+    <button
+      type="button"
+      className="ofwx-locate"
+      data-locating={locating}
+      aria-label={locating ? 'Finding your location' : 'Zoom to my location'}
+      title="My location"
+      {...rest}
+    >
+      <svg
+        className="ofwx-locate__icon"
+        viewBox="0 0 24 24"
+        width="20"
+        height="20"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="3" fill="currentColor" />
+        <path
+          d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.75"
+          strokeLinecap="round"
+        />
+        <circle
+          cx="12"
+          cy="12"
+          r="7"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+        />
+      </svg>
+    </button>
+  );
+}
