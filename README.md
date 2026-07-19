@@ -49,7 +49,11 @@ Layers are plugins. Each defines `name`, `icon`, `layer`, optional `cache`, `set
 
 ## GitHub Pages
 
-The app is a static export (`output: 'export'`) with `basePath: /open-fire-wx`. Deploy via `.github/workflows/deploy-pages.yml`. Enable **Settings → Pages → Source: GitHub Actions**.
+The app is a static export (`output: 'export'`) with `basePath: /open-fire-wx`.
+
+Deploy is handled by [`.github/workflows/deploy-pages.yml`](.github/workflows/deploy-pages.yml) on every push to `main`.
+
+**Required repo setting:** Settings → Pages → **Build and deployment** → Source: **GitHub Actions** (not the `gh-pages` branch).
 
 ## License
 
