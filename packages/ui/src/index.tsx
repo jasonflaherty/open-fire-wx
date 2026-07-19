@@ -57,6 +57,34 @@ export type LocateButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   locating?: boolean;
 };
 
+export type StateSelectProps = {
+  value: string;
+  options: Array<{ code: string; name: string }>;
+  onChange: (code: string) => void;
+  id?: string;
+};
+
+export function StateSelect({ value, options, onChange, id }: StateSelectProps) {
+  return (
+    <label className="ofwx-state">
+      <span className="ofwx-state__label">State</span>
+      <select
+        id={id}
+        className="ofwx-state__select"
+        value={value}
+        aria-label="Map state"
+        onChange={(event) => onChange(event.target.value)}
+      >
+        {options.map((option) => (
+          <option key={option.code} value={option.code}>
+            {option.code}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
 export function LocateButton({ locating = false, ...rest }: LocateButtonProps) {
   return (
     <button

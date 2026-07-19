@@ -1,9 +1,21 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { Brand, ControlStrip, LayerToggle, LocateButton } from '@openfirewx/ui';
-import type { LayerPlugin } from '@openfirewx/shared';
+import {
+  Brand,
+  ControlStrip,
+  LayerToggle,
+  LocateButton,
+  StateSelect,
+} from '@openfirewx/ui';
+import {
+  DEFAULT_STATE_CODE,
+  PREFERRED_STATE_KEY,
+  US_STATE_VIEWS,
+  getStateView,
+  type LayerPlugin,
+} from '@openfirewx/shared';
 import type { CircleMarker, Map as LeafletMap } from 'leaflet';
 
 const FireMap = dynamic(
@@ -19,14 +31,43 @@ const LAYERS = [
   { id: 'noaa-weather', label: 'Radar', tone: 'weather' as const },
 ];
 
+function readSavedStateCode(): string {
+  try {
+    const saved = window.localStorage.getItem(PREFERRED_STATE_KEY);
+    if (saved && US_STATE_VIEWS.some((s) => s.code === saved)) {
+      return saved;
+    }
+  } catch {
+    /* private mode / blocked storage */
+  }
+  return DEFAULT_STATE_CODE;
+}
+
+function saveStateCode(code: string) {
+  try {
+    window.localStorage.setItem(PREFERRED_STATE_KEY, code);
+  } catch {
+    /* ignore */
+  }
+}
+
 export function MapApp() {
   const [plugins, setPlugins] = useState<LayerPlugin[]>([]);
   const [enabled, setEnabled] = useState<string[]>([]);
   const [ready, setReady] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [stateCode, setStateCode] = useState(DEFAULT_STATE_CODE);
+  const [bootstrapped, setBootstrapped] = useState(false);
   const mapRef = useRef<LeafletMap | null>(null);
   const markerRef = useRef<CircleMarker | null>(null);
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+
+  const stateView = useMemo(() => getStateView(stateCode), [stateCode]);
+
+  useEffect(() => {
+    setStateCode(readSavedStateCode());
+    setBootstrapped(true);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -78,6 +119,13 @@ export function MapApp() {
     );
   }
 
+  function onStateChange(code: string) {
+    const next = getStateView(code);
+    setStateCode(next.code);
+    saveStateCode(next.code);
+    mapRef.current?.flyTo(next.center, next.zoom, { duration: 0.7 });
+  }
+
   async function locateMe() {
     const map = mapRef.current;
     if (!map || locating) return;
@@ -119,6 +167,11 @@ export function MapApp() {
     });
   }
 
+  // Wait for localStorage read so the first paint uses the saved state
+  if (!bootstrapped) {
+    return <div className="shell" aria-busy="true" />;
+  }
+
   return (
     <div className="shell">
       {ready ? (
@@ -127,8 +180,8 @@ export function MapApp() {
           plugins={plugins}
           enabledPluginIds={enabled}
           basePath={basePath || ''}
-          center={[44.0, -120.5]}
-          zoom={7}
+          center={stateView.center}
+          zoom={stateView.zoom}
           onMapReady={onMapReady}
         />
       ) : (
@@ -147,6 +200,11 @@ export function MapApp() {
             />
           ))}
         </ControlStrip>
+        <StateSelect
+          value={stateCode}
+          options={US_STATE_VIEWS}
+          onChange={onStateChange}
+        />
       </header>
       <div className="locate-wrap">
         <LocateButton locating={locating} onClick={() => void locateMe()} />

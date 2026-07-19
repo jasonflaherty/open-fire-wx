@@ -102,6 +102,49 @@
   color: var(--color-text-muted);
 }
 
+.ofwx-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+  margin-left: 0.15rem;
+  padding-left: 0.55rem;
+  border-left: 1px solid var(--color-border);
+}
+
+.ofwx-state__label {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+.ofwx-state__select {
+  appearance: none;
+  border: none;
+  background: transparent
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%23a8adb4' d='M1 1l4 4 4-4'/%3E%3C/svg%3E")
+    no-repeat right 0.1rem center;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.3rem 1rem 0.3rem 0.2rem;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+.ofwx-state__select:hover,
+.ofwx-state__select:focus-visible {
+  background-color: rgba(247, 248, 249, 0.06);
+}
+
+.ofwx-state__select:focus-visible {
+  outline: 2px solid var(--color-warning);
+  outline-offset: 2px;
+}
+
 .ofwx-locate {
   appearance: none;
   display: grid;
