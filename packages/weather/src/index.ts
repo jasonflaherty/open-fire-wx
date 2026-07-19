@@ -145,7 +145,9 @@ export async function fetchAirNowPm25(options?: {
     resultRecordCount: '2000',
   });
 
-  const res = await fetch(`${AIRNOW_PM25_MONITORS_QUERY}?${params.toString()}`);
+  const res = await fetch(`${AIRNOW_PM25_MONITORS_QUERY}?${params.toString()}`, {
+    cache: 'no-store',
+  });
   if (!res.ok) throw new Error(`AirNow fetch failed (${res.status})`);
   const data = (await res.json()) as {
     features?: Array<{
@@ -230,6 +232,7 @@ export async function fetchNoaaPointWeather(
   const lon = Number(longitude.toFixed(4));
   const pointsRes = await fetch(`https://api.weather.gov/points/${lat},${lon}`, {
     headers: NWS_HEADERS,
+    cache: 'no-store',
   });
   if (!pointsRes.ok) {
     throw new Error(`NWS points failed (${pointsRes.status})`);
@@ -257,7 +260,10 @@ export async function fetchNoaaPointWeather(
     .filter(Boolean)
     .join(', ');
 
-  const forecastRes = await fetch(forecastUrl, { headers: NWS_HEADERS });
+  const forecastRes = await fetch(forecastUrl, {
+    headers: NWS_HEADERS,
+    cache: 'no-store',
+  });
   if (!forecastRes.ok) {
     throw new Error(`NWS forecast failed (${forecastRes.status})`);
   }

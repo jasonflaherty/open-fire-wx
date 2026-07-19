@@ -1,5 +1,6 @@
-/* Network-first for fire data; cache-first for the app shell */
-const CACHE = 'ofwx-v2';
+/* Data dumps expire hourly; shell stays network/cache hybrid */
+const CACHE = 'ofwx-v4';
+const DATA_MAX_AGE_MS = 60 * 60 * 1000;
 const SHELL = ['./', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', (event) => {
@@ -16,22 +17,59 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+function isDataRequest(url) {
+  return url.pathname.includes('/data/');
+}
+
+async function putTimedResponse(request, response) {
+  const headers = new Headers(response.headers);
+  headers.set('x-ofwx-cached-at', String(Date.now()));
+  headers.set('Cache-Control', 'max-age=3600');
+  const body = await response.clone().blob();
+  const timed = new Response(body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+  const cache = await caches.open(CACHE);
+  await cache.put(request, timed);
+}
+
+async function matchFreshData(request) {
+  const cache = await caches.open(CACHE);
+  const cached = await cache.match(request);
+  if (!cached) return null;
+
+  const cachedAt = Number(cached.headers.get('x-ofwx-cached-at') || 0);
+  if (!cachedAt || Date.now() - cachedAt > DATA_MAX_AGE_MS) {
+    await cache.delete(request);
+    return null;
+  }
+  return cached;
+}
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
-  const isData = url.pathname.includes('/data/');
 
-  if (isData) {
+  if (isDataRequest(url)) {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE).then((cache) => cache.put(request, copy));
+      (async () => {
+        try {
+          // Bypass HTTP caches so reloads can see hourly-refreshed dumps
+          const response = await fetch(request, { cache: 'no-store' });
+          if (response.ok) {
+            await putTimedResponse(request, response);
+          }
           return response;
-        })
-        .catch(() => caches.match(request).then((c) => c || Response.error())),
+        } catch {
+          const fresh = await matchFreshData(request);
+          if (fresh) return fresh;
+          return Response.error();
+        }
+      })(),
     );
     return;
   }

@@ -57,6 +57,16 @@ export type LayerPlugin = {
 export const PACKAGE_NAME = 'Open Fire WX';
 export const BASE_PATH = '/open-fire-wx';
 
+/** Bucket requests into 1-hour windows so reloads bust stale CDN/SW caches. */
+export function hourlyCacheBustParam(now = Date.now()): string {
+  return `h=${Math.floor(now / (60 * 60 * 1000))}`;
+}
+
+export function withHourlyCacheBust(url: string, now = Date.now()): string {
+  const sep = url.includes('?') ? '&' : '?';
+  return `${url}${sep}${hourlyCacheBustParam(now)}`;
+}
+
 export {
   US_STATE_VIEWS,
   DEFAULT_STATE_CODE,

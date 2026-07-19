@@ -1,3 +1,5 @@
+import { withHourlyCacheBust } from '@openfirewx/shared';
+
 export type FireFeatureProperties = {
   name?: string;
   acres?: number;
@@ -83,7 +85,7 @@ export async function fetchLiveFirePerimeters(): Promise<FireCollection> {
   let offset = 0;
 
   for (;;) {
-    const res = await fetch(nifcPageUrl(offset, pageSize));
+    const res = await fetch(nifcPageUrl(offset, pageSize), { cache: 'no-store' });
     if (!res.ok) {
       throw new Error(`Failed to fetch fire perimeters (${res.status})`);
     }
@@ -126,7 +128,7 @@ export async function fetchFirePerimeters(options?: {
   const tryStatic = async (): Promise<FireCollection | null> => {
     if (!staticUrl) return null;
     try {
-      const res = await fetch(staticUrl);
+      const res = await fetch(withHourlyCacheBust(staticUrl), { cache: 'no-store' });
       if (!res.ok) return null;
       const data = (await res.json()) as FireCollection;
       if (data?.type !== 'FeatureCollection') return null;
@@ -241,7 +243,9 @@ export async function fetchLiveHotspots(options?: {
   let offset = 0;
 
   for (;;) {
-    const res = await fetch(viirsPageUrl(offset, pageSize, maxHoursOld));
+    const res = await fetch(viirsPageUrl(offset, pageSize, maxHoursOld), {
+      cache: 'no-store',
+    });
     if (!res.ok) {
       throw new Error(`Failed to fetch VIIRS hotspots (${res.status})`);
     }
@@ -281,7 +285,9 @@ export async function fetchHotspots(options?: {
   const tryStatic = async (): Promise<HotspotCollection | null> => {
     if (!options?.staticUrl) return null;
     try {
-      const res = await fetch(options.staticUrl);
+      const res = await fetch(withHourlyCacheBust(options.staticUrl), {
+        cache: 'no-store',
+      });
       if (!res.ok) return null;
       const data = (await res.json()) as HotspotCollection;
       if (data?.type !== 'FeatureCollection' || !data.features?.length) return null;

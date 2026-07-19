@@ -13,6 +13,9 @@
     "typecheck": "tsc --noEmit",
     "lint": "tsc --noEmit"
   },
+  "dependencies": {
+    "@openfirewx/shared": "workspace:*"
+  },
   "devDependencies": {
     "typescript": "^5.7.2"
   }

@@ -32,7 +32,7 @@ export const firePerimetersPlugin: LayerPlugin = {
   description: 'Current interagency wildfire perimeters (NIFC WFIGS)',
   enabledByDefault: true,
   cache: {
-    maxAgeSeconds: 60 * 30,
+    maxAgeSeconds: 60 * 60,
     strategy: 'network-first',
   },
   legend: {

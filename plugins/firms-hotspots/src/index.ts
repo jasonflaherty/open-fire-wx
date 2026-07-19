@@ -23,7 +23,7 @@ export const firmsHotspotsPlugin: LayerPlugin = {
   description: 'NASA FIRMS / VIIRS thermal hotspots (last 24h, CONUS)',
   enabledByDefault: false,
   cache: {
-    maxAgeSeconds: 60 * 30,
+    maxAgeSeconds: 60 * 60,
     strategy: 'network-first',
   },
   legend: {

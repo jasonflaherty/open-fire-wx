@@ -90,6 +90,10 @@ importers:
         version: 5.9.3
 
   packages/fire:
+    dependencies:
+      '@openfirewx/shared':
+        specifier: workspace:*
+        version: link:../shared
     devDependencies:
       typescript:
         specifier: ^5.7.2
