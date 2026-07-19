@@ -21,7 +21,7 @@ export const firmsHotspotsPlugin: LayerPlugin = {
   name: 'Satellite Heat',
   icon: 'satellite',
   description: 'NASA FIRMS / VIIRS thermal hotspots (last 24h, CONUS)',
-  enabledByDefault: true,
+  enabledByDefault: false,
   cache: {
     maxAgeSeconds: 60 * 30,
     strategy: 'network-first',
