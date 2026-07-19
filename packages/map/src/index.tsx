@@ -3,7 +3,11 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import type { Map as LeafletMap } from 'leaflet';
-import type { LayerPlugin, LeafletLayerHandle } from '@openfirewx/shared';
+import type {
+  FireSelectPayload,
+  LayerPlugin,
+  LeafletLayerHandle,
+} from '@openfirewx/shared';
 import { BASE_PATH } from '@openfirewx/shared';
 import { LongPressWeather } from './LongPressWeather';
 
@@ -16,19 +20,24 @@ export type FireMapProps = {
   children?: ReactNode;
   basePath?: string;
   onMapReady?: (map: LeafletMap) => void;
+  onFireSelect?: (payload: FireSelectPayload) => void;
 };
 
 function PluginLayers({
   plugins,
   enabledPluginIds,
   basePath,
+  onFireSelect,
 }: {
   plugins: LayerPlugin[];
   enabledPluginIds: string[];
   basePath: string;
+  onFireSelect?: (payload: FireSelectPayload) => void;
 }) {
   const map = useMap();
   const handlesRef = useRef<Map<string, LeafletLayerHandle>>(new Map());
+  const onFireSelectRef = useRef(onFireSelect);
+  onFireSelectRef.current = onFireSelect;
 
   useEffect(() => {
     let cancelled = false;
@@ -47,7 +56,11 @@ function PluginLayers({
         if (!enabled.has(plugin.id) || handlesRef.current.has(plugin.id)) {
           continue;
         }
-        const handle = await plugin.layer({ map, basePath });
+        const handle = await plugin.layer({
+          map,
+          basePath,
+          onFireSelect: (payload) => onFireSelectRef.current?.(payload),
+        });
         if (cancelled) {
           handle.destroy();
           continue;
@@ -92,6 +105,7 @@ export function FireMap({
   children,
   basePath = BASE_PATH,
   onMapReady,
+  onFireSelect,
 }: FireMapProps) {
   const [mounted, setMounted] = useState(false);
 
@@ -119,6 +133,7 @@ export function FireMap({
         plugins={plugins}
         enabledPluginIds={enabledPluginIds}
         basePath={basePath}
+        onFireSelect={onFireSelect}
       />
       <MapReady onReady={onMapReady} />
       <LongPressWeather />

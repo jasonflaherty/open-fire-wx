@@ -14,9 +14,11 @@ import {
   PREFERRED_STATE_KEY,
   US_STATE_VIEWS,
   getStateView,
+  type FireSelectPayload,
   type LayerPlugin,
 } from '@openfirewx/shared';
 import type { CircleMarker, Map as LeafletMap } from 'leaflet';
+import { FireInfoSheet } from './FireInfoSheet';
 
 const FireMap = dynamic(
   () => import('@openfirewx/map').then((m) => m.FireMap),
@@ -58,6 +60,9 @@ export function MapApp() {
   const [locating, setLocating] = useState(false);
   const [stateCode, setStateCode] = useState(DEFAULT_STATE_CODE);
   const [bootstrapped, setBootstrapped] = useState(false);
+  const [selectedFire, setSelectedFire] = useState<FireSelectPayload | null>(
+    null,
+  );
   const mapRef = useRef<LeafletMap | null>(null);
   const markerRef = useRef<CircleMarker | null>(null);
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
@@ -111,12 +116,27 @@ export function MapApp() {
 
   const onMapReady = useCallback((map: LeafletMap) => {
     mapRef.current = map;
+    map.on('click', () => setSelectedFire(null));
+  }, []);
+
+  const onFireSelect = useCallback((payload: FireSelectPayload) => {
+    setSelectedFire(payload);
+  }, []);
+
+  const closeFireSheet = useCallback(() => {
+    setSelectedFire(null);
   }, []);
 
   function toggle(id: string) {
-    setEnabled((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
+    setEnabled((prev) => {
+      const next = prev.includes(id)
+        ? prev.filter((x) => x !== id)
+        : [...prev, id];
+      if (id === 'fire-perimeters' && !next.includes(id)) {
+        setSelectedFire(null);
+      }
+      return next;
+    });
   }
 
   function onStateChange(code: string) {
@@ -173,7 +193,7 @@ export function MapApp() {
   }
 
   return (
-    <div className="shell">
+    <div className="shell" data-sheet={selectedFire ? 'open' : 'closed'}>
       {ready ? (
         <FireMap
           className="map-root"
@@ -183,6 +203,7 @@ export function MapApp() {
           center={stateView.center}
           zoom={stateView.zoom}
           onMapReady={onMapReady}
+          onFireSelect={onFireSelect}
         />
       ) : (
         <div className="map-root" aria-busy="true" />
@@ -211,6 +232,7 @@ export function MapApp() {
       <div className="locate-wrap">
         <LocateButton locating={locating} onClick={() => void locateMe()} />
       </div>
+      <FireInfoSheet selection={selectedFire} onClose={closeFireSheet} />
     </div>
   );
 }

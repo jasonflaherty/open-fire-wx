@@ -25,6 +25,9 @@ importers:
       '@openfirewx/design-system':
         specifier: workspace:*
         version: link:../../design-system
+      '@openfirewx/fire':
+        specifier: workspace:*
+        version: link:../../packages/fire
       '@openfirewx/map':
         specifier: workspace:*
         version: link:../../packages/map

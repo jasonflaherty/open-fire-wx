@@ -16,6 +16,13 @@ const OUT_FIELDS = [
   'attr_PercentContained',
   'poly_DateCurrent',
   'attr_POOState',
+  'poly_IRWINID',
+  'attr_IrwinID',
+  'attr_UniqueFireIdentifier',
+  'attr_IncidentShortDescription',
+  'attr_FireCause',
+  'attr_POOCounty',
+  'attr_TotalIncidentPersonnel',
 ].join(',');
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -34,8 +41,15 @@ function pageUrl(offset, pageSize) {
   return `${QUERY}?${params.toString()}`;
 }
 
+function optionalString(value) {
+  if (value == null) return undefined;
+  const s = String(value).trim();
+  return s ? s : undefined;
+}
+
 function normalize(feature) {
   const props = feature.properties ?? {};
+  const personnel = Number(props.attr_TotalIncidentPersonnel ?? NaN);
   return {
     type: 'Feature',
     geometry: feature.geometry,
@@ -44,7 +58,13 @@ function normalize(feature) {
       acres: props.poly_GISAcres ?? props.acres,
       percentContained: props.attr_PercentContained ?? props.percentContained,
       updated: props.poly_DateCurrent ?? props.updated,
-      state: props.attr_POOState ?? props.state,
+      state: optionalString(props.attr_POOState ?? props.state) ?? '',
+      shortDescription: optionalString(props.attr_IncidentShortDescription),
+      cause: optionalString(props.attr_FireCause),
+      irwinId: optionalString(props.poly_IRWINID ?? props.attr_IrwinID),
+      uniqueFireIdentifier: optionalString(props.attr_UniqueFireIdentifier),
+      county: optionalString(props.attr_POOCounty),
+      personnel: Number.isFinite(personnel) ? personnel : undefined,
     },
   };
 }

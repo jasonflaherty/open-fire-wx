@@ -6,6 +6,12 @@ export type FireFeatureProperties = {
   percentContained?: number;
   updated?: string | number;
   state?: string;
+  shortDescription?: string;
+  cause?: string;
+  irwinId?: string;
+  uniqueFireIdentifier?: string;
+  county?: string;
+  personnel?: number;
 };
 
 export type FireFeature = {
@@ -34,6 +40,13 @@ const OUT_FIELDS = [
   'attr_PercentContained',
   'poly_DateCurrent',
   'attr_POOState',
+  'poly_IRWINID',
+  'attr_IrwinID',
+  'attr_UniqueFireIdentifier',
+  'attr_IncidentShortDescription',
+  'attr_FireCause',
+  'attr_POOCounty',
+  'attr_TotalIncidentPersonnel',
 ].join(',');
 
 function nifcPageUrl(offset: number, pageSize: number): string {
@@ -49,11 +62,18 @@ function nifcPageUrl(offset: number, pageSize: number): string {
   return `${NIFC_PERIMETERS_QUERY}?${params.toString()}`;
 }
 
+function optionalString(value: unknown): string | undefined {
+  if (value == null) return undefined;
+  const s = String(value).trim();
+  return s ? s : undefined;
+}
+
 function normalizeFeature(raw: Record<string, unknown>): FireFeature | null {
   const geometry = raw.geometry as FireFeature['geometry'] | undefined;
   if (!geometry) return null;
   const props = (raw.properties ?? {}) as Record<string, unknown>;
   const updated = props.poly_DateCurrent ?? props.updated;
+  const personnel = Number(props.attr_TotalIncidentPersonnel ?? props.personnel ?? NaN);
   return {
     type: 'Feature',
     geometry,
@@ -65,7 +85,17 @@ function normalizeFeature(raw: Record<string, unknown>): FireFeature | null {
         undefined,
       updated:
         typeof updated === 'number' || typeof updated === 'string' ? updated : '',
-      state: String(props.attr_POOState ?? props.state ?? ''),
+      state: optionalString(props.attr_POOState ?? props.state) ?? '',
+      shortDescription: optionalString(
+        props.attr_IncidentShortDescription ?? props.shortDescription,
+      ),
+      cause: optionalString(props.attr_FireCause ?? props.cause),
+      irwinId: optionalString(props.poly_IRWINID ?? props.attr_IrwinID ?? props.irwinId),
+      uniqueFireIdentifier: optionalString(
+        props.attr_UniqueFireIdentifier ?? props.uniqueFireIdentifier,
+      ),
+      county: optionalString(props.attr_POOCounty ?? props.county),
+      personnel: Number.isFinite(personnel) ? personnel : undefined,
     },
   };
 }
@@ -309,3 +339,12 @@ export async function fetchHotspots(options?: {
 
   return (await tryStatic()) ?? fetchLiveHotspots();
 }
+
+export {
+  INCIWEB_PUBLICATION_RSS,
+  fetchInciwebNewsForFire,
+  fetchInciwebPublicationFeed,
+  matchInciwebNewsForFire,
+  stripHtml,
+  type InciwebNewsItem,
+} from './inciweb';

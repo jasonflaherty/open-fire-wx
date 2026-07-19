@@ -31,9 +31,28 @@ export type LegendSpec = {
   items: LegendItem[];
 };
 
+/** Payload when a fire perimeter is selected (opens the details sheet). */
+export type FireSelectPayload = {
+  properties: {
+    name?: string;
+    acres?: number;
+    percentContained?: number;
+    updated?: string | number;
+    state?: string;
+    shortDescription?: string;
+    cause?: string;
+    irwinId?: string;
+    uniqueFireIdentifier?: string;
+    county?: string;
+    personnel?: number;
+  };
+  latlng: { lat: number; lng: number };
+};
+
 export type MapContext = {
   map: LeafletMap;
   basePath: string;
+  onFireSelect?: (payload: FireSelectPayload) => void;
 };
 
 export type LeafletLayerHandle = {

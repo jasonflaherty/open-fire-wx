@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@openfirewx/design-system": "workspace:*",
+    "@openfirewx/fire": "workspace:*",
     "@openfirewx/map": "workspace:*",
     "@openfirewx/plugin-aqi": "workspace:*",
     "@openfirewx/plugin-fire-perimeters": "workspace:*",

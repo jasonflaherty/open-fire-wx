@@ -11,20 +11,6 @@ function styleFeature() {
   };
 }
 
-function formatUpdated(value: unknown): string | null {
-  if (value == null || value === '') return null;
-  if (typeof value === 'number') {
-    const d = new Date(value);
-    return Number.isNaN(d.getTime()) ? null : d.toLocaleDateString();
-  }
-  const asNum = Number(value);
-  if (!Number.isNaN(asNum) && String(value).length >= 12) {
-    const d = new Date(asNum);
-    return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleDateString();
-  }
-  return String(value);
-}
-
 export const firePerimetersPlugin: LayerPlugin = {
   id: 'fire-perimeters',
   name: 'Fire Perimeters',
@@ -57,19 +43,25 @@ export const firePerimetersPlugin: LayerPlugin = {
     const geoJson = L.geoJSON(collection as unknown as GeoJSON.GeoJsonObject, {
       style: styleFeature,
       onEachFeature(feature, layer) {
-        const name = feature.properties?.name ?? 'Fire';
-        const acres = feature.properties?.acres;
-        const contained = feature.properties?.percentContained;
-        const state = feature.properties?.state;
-        const updated = formatUpdated(feature.properties?.updated);
-        const bits = [
-          `<strong>${name}</strong>`,
-          state ? String(state) : null,
-          acres != null ? `${Math.round(Number(acres)).toLocaleString()} acres` : null,
-          contained != null ? `${Math.round(Number(contained))}% contained` : null,
-          updated ? `Updated ${updated}` : null,
-        ].filter(Boolean);
-        layer.bindPopup(bits.join('<br/>'));
+        layer.on('click', (event) => {
+          L.DomEvent.stopPropagation(event);
+          ctx.onFireSelect?.({
+            properties: {
+              name: feature.properties?.name,
+              acres: feature.properties?.acres,
+              percentContained: feature.properties?.percentContained,
+              updated: feature.properties?.updated,
+              state: feature.properties?.state,
+              shortDescription: feature.properties?.shortDescription,
+              cause: feature.properties?.cause,
+              irwinId: feature.properties?.irwinId,
+              uniqueFireIdentifier: feature.properties?.uniqueFireIdentifier,
+              county: feature.properties?.county,
+              personnel: feature.properties?.personnel,
+            },
+            latlng: { lat: event.latlng.lat, lng: event.latlng.lng },
+          });
+        });
       },
     });
 

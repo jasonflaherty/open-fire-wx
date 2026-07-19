@@ -1,4 +1,9 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import {
+  useEffect,
+  useId,
+  type ButtonHTMLAttributes,
+  type ReactNode,
+} from 'react';
 
 export type BrandProps = {
   name?: string;
@@ -125,5 +130,67 @@ export function LocateButton({ locating = false, ...rest }: LocateButtonProps) {
         />
       </svg>
     </button>
+  );
+}
+
+export type BottomSheetProps = {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  children: ReactNode;
+  footer?: ReactNode;
+};
+
+export function BottomSheet({
+  open,
+  onClose,
+  title,
+  children,
+  footer,
+}: BottomSheetProps) {
+  const titleId = useId();
+
+  useEffect(() => {
+    if (!open) return;
+    function onKey(event: KeyboardEvent) {
+      if (event.key === 'Escape') onClose();
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
+
+  return (
+    <div className="ofwx-sheet" data-open={open} aria-hidden={!open}>
+      <button
+        type="button"
+        className="ofwx-sheet__backdrop"
+        aria-label="Close fire details"
+        tabIndex={open ? 0 : -1}
+        onClick={onClose}
+      />
+      <div
+        className="ofwx-sheet__panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+      >
+        <div className="ofwx-sheet__handle" aria-hidden="true" />
+        <header className="ofwx-sheet__header">
+          <h2 id={titleId} className="ofwx-sheet__title">
+            {title}
+          </h2>
+          <button
+            type="button"
+            className="ofwx-sheet__close"
+            aria-label="Close"
+            onClick={onClose}
+          >
+            ×
+          </button>
+        </header>
+        <div className="ofwx-sheet__body">{children}</div>
+        {footer ? <footer className="ofwx-sheet__footer">{footer}</footer> : null}
+      </div>
+    </div>
   );
 }

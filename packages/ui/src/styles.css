@@ -238,3 +238,123 @@
     transform: scale(0.92);
   }
 }
+
+.ofwx-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 800;
+  pointer-events: none;
+}
+
+.ofwx-sheet[data-open='true'] {
+  pointer-events: auto;
+}
+
+.ofwx-sheet__backdrop {
+  appearance: none;
+  position: absolute;
+  inset: 0;
+  border: none;
+  padding: 0;
+  margin: 0;
+  background: rgba(10, 11, 12, 0.45);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 220ms ease;
+}
+
+.ofwx-sheet[data-open='true'] .ofwx-sheet__backdrop {
+  opacity: 1;
+}
+
+.ofwx-sheet__panel {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: min(72dvh, 36rem);
+  display: flex;
+  flex-direction: column;
+  background: var(--color-base-elevated);
+  border: 1px solid var(--color-border);
+  border-bottom: none;
+  border-radius: var(--radius-md) var(--radius-md) 0 0;
+  box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.45);
+  transform: translateY(108%);
+  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.ofwx-sheet[data-open='true'] .ofwx-sheet__panel {
+  transform: translateY(0);
+}
+
+.ofwx-sheet__handle {
+  width: 2.5rem;
+  height: 4px;
+  margin: 0.55rem auto 0.15rem;
+  border-radius: 999px;
+  background: rgba(247, 248, 249, 0.22);
+  flex-shrink: 0;
+}
+
+.ofwx-sheet__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.55rem 1rem 0.65rem;
+  border-bottom: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.ofwx-sheet__title {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+  color: var(--color-text);
+}
+
+.ofwx-sheet__close {
+  appearance: none;
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  margin: -0.15rem -0.25rem 0 0;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ofwx-sheet__close:hover,
+.ofwx-sheet__close:focus-visible {
+  color: var(--color-text);
+  background: rgba(247, 248, 249, 0.06);
+}
+
+.ofwx-sheet__close:focus-visible {
+  outline: 2px solid var(--color-warning);
+  outline-offset: 2px;
+}
+
+.ofwx-sheet__body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.85rem 1rem 1rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.ofwx-sheet__footer {
+  flex-shrink: 0;
+  padding: 0.65rem 1rem 0.85rem;
+  border-top: 1px solid var(--color-border);
+}
