@@ -1,0 +1,130 @@
+name: Issue triage
+
+on:
+  issues:
+    types: [opened, reopened, edited]
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/github-script@v7
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        with:
+          script: |
+            const fs = require('fs');
+            const philosophy = fs.readFileSync('apps/docs/DESIGN_PHILOSOPHY.md', 'utf8');
+            const issue = context.payload.issue;
+            const title = issue.title || '';
+            const body = issue.body || '';
+            const text = `${title}\n\n${body}`.toLowerCase();
+
+            const checks = [
+              {
+                id: 'simple',
+                q: 'Does this keep the UI simple?',
+                pass: !/(dashboard|settings page|admin panel|sidebar menu|hamburger)/.test(text),
+              },
+              {
+                id: 'awareness',
+                q: 'Does it improve wildfire awareness?',
+                pass: /(fire|smoke|wind|radar|weather|perimeter|evacuation|fuel|lightning|wildfire|red flag)/.test(text),
+              },
+              {
+                id: 'mobile',
+                q: 'Does it work well on mobile?',
+                pass: !/(desktop only|hover-only|right.?click)/.test(text),
+              },
+              {
+                id: 'complexity',
+                q: 'Does it avoid unnecessary complexity?',
+                pass: !/(rewrite|monolith|microservices|blockchain)/.test(text),
+              },
+              {
+                id: 'plugin',
+                q: 'Is layer/data work better as a plugin?',
+                note: /(layer|basemap|radar|smoke|lightning|provider|feed)/.test(text)
+                  ? 'Likely a **plugin**, not core UI.'
+                  : 'May belong in core if it is shell/UX fundamentals.',
+              },
+            ];
+
+            let recommendation = 'Needs discussion';
+            const awareness = checks.find((c) => c.id === 'awareness');
+            const simple = checks.find((c) => c.id === 'simple');
+            if (awareness.pass && simple.pass) recommendation = 'Fits project goals — consider accepting';
+            if (!awareness.pass) recommendation = 'Unclear wildfire value — clarify or decline';
+            if (/(hidden menu|clutter|dashboard with widgets)/.test(text)) {
+              recommendation = 'Conflicts with Simple principle — revise or decline';
+            }
+
+            let aiNote = '';
+            if (process.env.OPENAI_API_KEY) {
+              try {
+                const res = await fetch('https://api.openai.com/v1/chat/completions', {
+                  method: 'POST',
+                  headers: {
+                    Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    temperature: 0.2,
+                    messages: [
+                      {
+                        role: 'system',
+                        content:
+                          'You are an advisory maintainer for Open Fire WX. Evaluate issues against the design philosophy. Be concise. Humans decide merges.',
+                      },
+                      {
+                        role: 'user',
+                        content: `Philosophy:\n${philosophy}\n\nIssue title: ${title}\n\nIssue body:\n${body}\n\nGive a short recommendation (2-4 sentences) and whether this should be core, plugin, or decline.`,
+                      },
+                    ],
+                  }),
+                });
+                if (res.ok) {
+                  const data = await res.json();
+                  aiNote = data.choices?.[0]?.message?.content?.trim() || '';
+                }
+              } catch (e) {
+                aiNote = '';
+              }
+            }
+
+            const lines = [
+              '## Automated triage (advisory)',
+              '',
+              'Evaluated against [Design Philosophy](../blob/main/apps/docs/DESIGN_PHILOSOPHY.md). Humans make the final decision.',
+              '',
+              `**Recommendation:** ${recommendation}`,
+              '',
+              '| Check | Result |',
+              '| --- | --- |',
+              ...checks.map((c) => {
+                if (c.note) return `| ${c.q} | ${c.note} |`;
+                return `| ${c.q} | ${c.pass ? 'Likely yes' : 'Needs care'} |`;
+              }),
+            ];
+
+            if (aiNote) {
+              lines.push('', '### Model notes', '', aiNote);
+            } else {
+              lines.push(
+                '',
+                '_Rule-based checklist used. Set repo secret `OPENAI_API_KEY` for model-assisted notes._',
+              );
+            }
+
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: lines.join('\n'),
+            });
