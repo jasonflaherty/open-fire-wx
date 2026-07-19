@@ -115,6 +115,8 @@ export function MapApp() {
           plugins={plugins}
           enabledPluginIds={enabled}
           basePath={basePath || ''}
+          center={[44.0, -120.5]}
+          zoom={7}
           onMapReady={onMapReady}
         />
       ) : (

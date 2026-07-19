@@ -85,8 +85,8 @@ function MapReady({ onReady }: { onReady?: (map: LeafletMap) => void }) {
 export function FireMap({
   plugins,
   enabledPluginIds,
-  center = [39.5, -111.5],
-  zoom = 6,
+  center = [44.0, -120.5],
+  zoom = 7,
   className,
   children,
   basePath = BASE_PATH,

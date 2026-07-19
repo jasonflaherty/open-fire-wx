@@ -75,15 +75,6 @@ export const firePerimetersPlugin: LayerPlugin = {
 
     geoJson.addTo(ctx.map);
 
-    try {
-      const bounds = geoJson.getBounds();
-      if (bounds.isValid()) {
-        ctx.map.fitBounds(bounds.pad(0.08), { maxZoom: 8 });
-      }
-    } catch {
-      /* ignore fit errors */
-    }
-
     return {
       layer: geoJson,
       destroy() {
