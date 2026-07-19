@@ -1,7 +1,7 @@
 {
-  "name": "Open Fire WX",
+  "name": "Fire WX",
   "short_name": "Fire WX",
-  "description": "Open source wildfire intelligence map",
+  "description": "Open source wildfire map",
   "start_url": "/open-fire-wx/",
   "scope": "/open-fire-wx/",
   "display": "standalone",

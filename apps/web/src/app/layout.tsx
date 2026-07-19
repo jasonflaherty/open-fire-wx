@@ -9,13 +9,13 @@ import { ServiceWorkerRegister } from '../components/ServiceWorkerRegister';
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
 
 export const metadata: Metadata = {
-  title: 'Open Fire WX',
-  description: 'Open source wildfire intelligence map',
+  title: 'Fire WX',
+  description: 'Open source wildfire map',
   manifest: `${basePath}/manifest.webmanifest`,
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Open Fire WX',
+    title: 'Fire WX',
   },
   icons: {
     icon: `${basePath}/icon.svg`,

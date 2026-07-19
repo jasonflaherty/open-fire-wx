@@ -5,14 +5,11 @@ export type BrandProps = {
   tagline?: string;
 };
 
-export function Brand({
-  name = 'Open Fire WX',
-  tagline = 'Where are the fires?',
-}: BrandProps) {
+export function Brand({ name = 'Fire WX', tagline }: BrandProps) {
   return (
     <div className="ofwx-brand">
       <p className="ofwx-brand__name">{name}</p>
-      <p className="ofwx-brand__tag">{tagline}</p>
+      {tagline ? <p className="ofwx-brand__tag">{tagline}</p> : null}
     </div>
   );
 }
@@ -38,6 +35,7 @@ export function LayerToggle({
       aria-pressed={active}
       {...rest}
     >
+      <span className="ofwx-layer-toggle__dot" aria-hidden="true" />
       {label}
     </button>
   );

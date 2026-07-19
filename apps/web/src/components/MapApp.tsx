@@ -2,13 +2,19 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { Brand, ControlStrip, LayerToggle, StatusText } from '@openfirewx/ui';
+import { Brand, ControlStrip, LayerToggle } from '@openfirewx/ui';
 import type { LayerPlugin } from '@openfirewx/shared';
 
 const FireMap = dynamic(
   () => import('@openfirewx/map').then((m) => m.FireMap),
   { ssr: false },
 );
+
+const LAYERS = [
+  { id: 'fire-perimeters', label: 'Fires', tone: 'fire' as const },
+  { id: 'firms-hotspots', label: 'Heat', tone: 'hotspot' as const },
+  { id: 'noaa-weather', label: 'Radar', tone: 'weather' as const },
+];
 
 export function MapApp() {
   const [plugins, setPlugins] = useState<LayerPlugin[]>([]);
@@ -57,33 +63,19 @@ export function MapApp() {
       ) : (
         <div className="map-root" aria-busy="true" />
       )}
-      <header className="chrome">
-        <div className="chrome__panel">
-          <Brand />
-          <StatusText>NIFC perimeters · FIRMS heat · dark basemap</StatusText>
-        </div>
-        <div className="chrome__panel chrome__controls">
-          <ControlStrip>
+      <header className="chrome" aria-label="Map controls">
+        <Brand name="Fire WX" tagline={undefined} />
+        <ControlStrip>
+          {LAYERS.map((layer) => (
             <LayerToggle
-              label="Fires"
-              active={enabled.includes('fire-perimeters')}
-              tone="fire"
-              onClick={() => toggle('fire-perimeters')}
+              key={layer.id}
+              label={layer.label}
+              active={enabled.includes(layer.id)}
+              tone={layer.tone}
+              onClick={() => toggle(layer.id)}
             />
-            <LayerToggle
-              label="Heat"
-              active={enabled.includes('firms-hotspots')}
-              tone="hotspot"
-              onClick={() => toggle('firms-hotspots')}
-            />
-            <LayerToggle
-              label="Radar"
-              active={enabled.includes('noaa-weather')}
-              tone="weather"
-              onClick={() => toggle('noaa-weather')}
-            />
-          </ControlStrip>
-        </div>
+          ))}
+        </ControlStrip>
       </header>
     </div>
   );
