@@ -28,6 +28,9 @@ importers:
       '@openfirewx/map':
         specifier: workspace:*
         version: link:../../packages/map
+      '@openfirewx/plugin-aqi':
+        specifier: workspace:*
+        version: link:../../plugins/aqi
       '@openfirewx/plugin-fire-perimeters':
         specifier: workspace:*
         version: link:../../plugins/fire-perimeters
@@ -37,6 +40,9 @@ importers:
       '@openfirewx/plugin-noaa-weather':
         specifier: workspace:*
         version: link:../../plugins/noaa-weather
+      '@openfirewx/plugin-smoke':
+        specifier: workspace:*
+        version: link:../../plugins/smoke
       '@openfirewx/shared':
         specifier: workspace:*
         version: link:../../packages/shared
@@ -153,6 +159,25 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
 
+  plugins/aqi:
+    dependencies:
+      '@openfirewx/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      '@openfirewx/weather':
+        specifier: workspace:*
+        version: link:../../packages/weather
+      leaflet:
+        specifier: ^1.9.4
+        version: 1.9.4
+    devDependencies:
+      '@types/leaflet':
+        specifier: ^1.9.15
+        version: 1.9.21
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
   plugins/fire-perimeters:
     dependencies:
       '@openfirewx/fire':
@@ -192,6 +217,25 @@ importers:
         version: 5.9.3
 
   plugins/noaa-weather:
+    dependencies:
+      '@openfirewx/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      '@openfirewx/weather':
+        specifier: workspace:*
+        version: link:../../packages/weather
+      leaflet:
+        specifier: ^1.9.4
+        version: 1.9.4
+    devDependencies:
+      '@types/leaflet':
+        specifier: ^1.9.15
+        version: 1.9.21
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  plugins/smoke:
     dependencies:
       '@openfirewx/shared':
         specifier: workspace:*

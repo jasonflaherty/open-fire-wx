@@ -14,9 +14,11 @@ const nextConfig = {
     '@openfirewx/shared',
     '@openfirewx/fire',
     '@openfirewx/weather',
+    '@openfirewx/plugin-aqi',
     '@openfirewx/plugin-fire-perimeters',
     '@openfirewx/plugin-firms-hotspots',
     '@openfirewx/plugin-noaa-weather',
+    '@openfirewx/plugin-smoke',
   ],
   env: {
     NEXT_PUBLIC_BASE_PATH: basePath,

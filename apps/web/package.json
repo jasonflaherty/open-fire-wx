@@ -13,9 +13,11 @@
   "dependencies": {
     "@openfirewx/design-system": "workspace:*",
     "@openfirewx/map": "workspace:*",
+    "@openfirewx/plugin-aqi": "workspace:*",
     "@openfirewx/plugin-fire-perimeters": "workspace:*",
     "@openfirewx/plugin-firms-hotspots": "workspace:*",
     "@openfirewx/plugin-noaa-weather": "workspace:*",
+    "@openfirewx/plugin-smoke": "workspace:*",
     "@openfirewx/shared": "workspace:*",
     "@openfirewx/ui": "workspace:*",
     "leaflet": "^1.9.4",

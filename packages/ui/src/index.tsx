@@ -17,7 +17,7 @@ export function Brand({ name = 'Fire WX', tagline }: BrandProps) {
 export type LayerToggleProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   label: string;
   active: boolean;
-  tone?: 'fire' | 'weather' | 'hotspot';
+  tone?: 'fire' | 'weather' | 'hotspot' | 'smoke' | 'aqi';
 };
 
 export function LayerToggle({

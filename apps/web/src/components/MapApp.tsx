@@ -14,6 +14,8 @@ const FireMap = dynamic(
 const LAYERS = [
   { id: 'fire-perimeters', label: 'Fires', tone: 'fire' as const },
   { id: 'firms-hotspots', label: 'Heat', tone: 'hotspot' as const },
+  { id: 'smoke', label: 'Smoke', tone: 'smoke' as const },
+  { id: 'aqi', label: 'AQI', tone: 'aqi' as const },
   { id: 'noaa-weather', label: 'Radar', tone: 'weather' as const },
 ];
 
@@ -32,14 +34,24 @@ export function MapApp() {
       const [
         { firePerimetersPlugin },
         { firmsHotspotsPlugin },
+        { smokePlugin },
+        { aqiPlugin },
         { noaaWeatherPlugin },
       ] = await Promise.all([
         import('@openfirewx/plugin-fire-perimeters'),
         import('@openfirewx/plugin-firms-hotspots'),
+        import('@openfirewx/plugin-smoke'),
+        import('@openfirewx/plugin-aqi'),
         import('@openfirewx/plugin-noaa-weather'),
       ]);
       if (cancelled) return;
-      const list = [firePerimetersPlugin, firmsHotspotsPlugin, noaaWeatherPlugin];
+      const list = [
+        firePerimetersPlugin,
+        firmsHotspotsPlugin,
+        smokePlugin,
+        aqiPlugin,
+        noaaWeatherPlugin,
+      ];
       setPlugins(list);
       setEnabled(list.filter((p) => p.enabledByDefault).map((p) => p.id));
       setReady(true);

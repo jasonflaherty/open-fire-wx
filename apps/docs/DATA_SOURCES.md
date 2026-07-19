@@ -11,8 +11,8 @@ Open Fire WX treats map layers as **plugins**. Core stays thin; data providers p
 | Official incidents | NIFC / InciWeb | ★★★★★ | Partial (perimeter metadata) |
 | Weather / radar | NOAA / RainViewer | ★★★★★ | Radar overlay |
 | Wind | NOAA | ★★★★ | Planned |
-| Smoke | NOAA HRRR Smoke | ★★★★ | Planned |
-| Air quality | AirNow | ★★★ | Planned |
+| Smoke | NOAA NDGD surface smoke | ★★★★ | Live (plugin) |
+| Air quality | AirNow PM2.5 monitors | ★★★ | Live (plugin) |
 | Terrain | USGS | ★★★ | Planned |
 | Basemap | OSM / Carto Dark (Leaflet) | ★★★★★ | Live |
 

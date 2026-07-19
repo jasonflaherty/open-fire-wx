@@ -10,8 +10,8 @@ Public roadmap for Open Fire WX. Data priorities live in [DATA_SOURCES.md](apps/
 | Satellite hotspots | NASA FIRMS / VIIRS | Done |
 | Weather / radar | NOAA / RainViewer | Radar done |
 | Wind visualization | NOAA | Next |
-| Smoke forecasts | NOAA HRRR Smoke | Next |
-| Air quality | AirNow | Later |
+| Smoke forecasts | NOAA NDGD / HRRR Smoke | Done |
+| Air quality | AirNow PM2.5 | Done |
 | Terrain | USGS | Later |
 | Basemap | OSM + dark tiles | Done (Leaflet) |
 
