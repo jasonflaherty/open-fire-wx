@@ -1,0 +1,20 @@
+{
+  "name": "open-fire-wx",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Open source wildfire intelligence map",
+  "license": "MIT",
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "dev": "turbo run dev --filter=@openfirewx/web",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "refresh-data": "node scripts/refresh-fire-data.mjs"
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  }
+}

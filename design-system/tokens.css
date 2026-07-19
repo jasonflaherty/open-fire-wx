@@ -1,0 +1,34 @@
+:root {
+  /* Open Fire WX — emergency-management palette */
+  --color-base: #1a1c1e;
+  --color-base-elevated: #242628;
+  --color-surface: #f7f8f9;
+  --color-surface-muted: #e8eaed;
+  --color-text: #f7f8f9;
+  --color-text-inverse: #1a1c1e;
+  --color-text-muted: #a8adb4;
+
+  --color-fire: #e85d04;
+  --color-extreme: #c1121f;
+  --color-warning: #e9c46a;
+  --color-weather: #3a86ff;
+  --color-safe: #2d6a4f;
+
+  --color-border: rgba(247, 248, 249, 0.12);
+  --color-overlay: rgba(26, 28, 30, 0.72);
+
+  --font-display: 'Sora', 'Avenir Next', 'Segoe UI', sans-serif;
+  --font-body: 'IBM Plex Sans', 'Avenir Next', 'Segoe UI', sans-serif;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  --shadow-control: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --transition-fast: 160ms ease;
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@openfirewx/docs",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "build": "echo 'Docs are markdown; no build step'",
+    "typecheck": "echo 'ok'",
+    "lint": "echo 'ok'"
+  }
+}

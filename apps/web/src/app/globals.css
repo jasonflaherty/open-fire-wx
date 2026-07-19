@@ -1,0 +1,95 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--color-base);
+  color: var(--color-text);
+}
+
+body {
+  min-height: 100dvh;
+}
+
+a {
+  color: inherit;
+}
+
+.shell {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+.map-root {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.map-root .leaflet-container {
+  width: 100%;
+  height: 100%;
+  background: var(--color-base);
+  font-family: var(--font-body);
+}
+
+.chrome {
+  position: absolute;
+  z-index: 500;
+  left: var(--space-4);
+  right: var(--space-4);
+  top: var(--space-4);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: flex-start;
+  justify-content: space-between;
+  pointer-events: none;
+}
+
+.chrome > * {
+  pointer-events: auto;
+}
+
+.chrome__panel {
+  background: var(--color-overlay);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  box-shadow: var(--shadow-control);
+  animation: rise 420ms ease both;
+}
+
+.chrome__controls {
+  animation: rise 520ms ease both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .chrome {
+    left: var(--space-3);
+    right: var(--space-3);
+    top: var(--space-3);
+  }
+}
