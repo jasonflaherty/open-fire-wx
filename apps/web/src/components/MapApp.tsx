@@ -55,7 +55,7 @@ export function MapApp() {
       <header className="chrome">
         <div className="chrome__panel">
           <Brand />
-          <StatusText>Active perimeters · dark basemap</StatusText>
+          <StatusText>NIFC live perimeters · dark basemap</StatusText>
         </div>
         <div className="chrome__panel chrome__controls">
           <ControlStrip>

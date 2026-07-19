@@ -38,7 +38,6 @@ jobs:
 
       - name: Refresh fire data
         run: pnpm refresh-data
-        continue-on-error: true
 
       - name: Build static site
         run: pnpm --filter @openfirewx/web build

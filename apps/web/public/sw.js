@@ -1,9 +1,9 @@
-/* Minimal service worker for installability + static shell cache */
-const CACHE = 'ofwx-v1';
-const ASSETS = ['./', './manifest.webmanifest', './icon.svg', './data/fires.json'];
+/* Network-first for fire data; cache-first for the app shell */
+const CACHE = 'ofwx-v2';
+const SHELL = ['./', './manifest.webmanifest', './icon.svg'];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)));
+  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(SHELL)));
   self.skipWaiting();
 });
 
@@ -19,6 +19,23 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   if (request.method !== 'GET') return;
+
+  const url = new URL(request.url);
+  const isData = url.pathname.includes('/data/');
+
+  if (isData) {
+    event.respondWith(
+      fetch(request)
+        .then((response) => {
+          const copy = response.clone();
+          caches.open(CACHE).then((cache) => cache.put(request, copy));
+          return response;
+        })
+        .catch(() => caches.match(request).then((c) => c || Response.error())),
+    );
+    return;
+  }
+
   event.respondWith(
     caches.match(request).then((cached) => {
       const fetched = fetch(request)
