@@ -1,0 +1,34 @@
+name: Feature request
+description: Suggest an idea for Open Fire WX
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: What one question does this help answer?
+      description: Every screen/feature should answer one clear question.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+    validations:
+      required: true
+  - type: dropdown
+    id: plugin
+    attributes:
+      label: Plugin or core?
+      options:
+        - Not sure
+        - Plugin (layer / data)
+        - Core (shell / UX)
+    validations:
+      required: true
+  - type: checkboxes
+    id: philosophy
+    attributes:
+      label: Design philosophy
+      options:
+        - label: I read apps/docs/DESIGN_PHILOSOPHY.md
+          required: true

@@ -1,0 +1,11 @@
+{
+  "name": "@openfirewx/design-system",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "files": ["tokens.css", "fonts.css"],
+  "exports": {
+    "./tokens.css": "./tokens.css",
+    "./fonts.css": "./fonts.css"
+  }
+}

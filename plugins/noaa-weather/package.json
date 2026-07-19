@@ -1,0 +1,25 @@
+{
+  "name": "@openfirewx/plugin-noaa-weather",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@openfirewx/shared": "workspace:*",
+    "@openfirewx/weather": "workspace:*",
+    "leaflet": "^1.9.4"
+  },
+  "devDependencies": {
+    "@types/leaflet": "^1.9.15",
+    "typescript": "^5.7.2"
+  }
+}
