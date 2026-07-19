@@ -1,0 +1,53 @@
+{
+  "type": "FeatureCollection",
+  "generatedAt": "2026-07-19T04:00:00.000Z",
+  "source": "sample (replace via pnpm refresh-data)",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Sample Ridge Fire",
+        "acres": 12400,
+        "percentContained": 35,
+        "updated": "2026-07-18",
+        "state": "UT"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-111.65, 40.12],
+            [-111.52, 40.12],
+            [-111.48, 40.22],
+            [-111.58, 40.28],
+            [-111.68, 40.2],
+            [-111.65, 40.12]
+          ]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Sample Canyon Fire",
+        "acres": 4200,
+        "percentContained": 60,
+        "updated": "2026-07-18",
+        "state": "ID"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [-114.55, 43.55],
+            [-114.42, 43.55],
+            [-114.4, 43.65],
+            [-114.52, 43.68],
+            [-114.58, 43.6],
+            [-114.55, 43.55]
+          ]
+        ]
+      }
+    }
+  ]
+}
