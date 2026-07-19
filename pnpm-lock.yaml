@@ -100,6 +100,9 @@ importers:
       '@openfirewx/shared':
         specifier: workspace:*
         version: link:../shared
+      '@openfirewx/weather':
+        specifier: workspace:*
+        version: link:../weather
       leaflet:
         specifier: ^1.9.4
         version: 1.9.4

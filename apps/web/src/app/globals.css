@@ -53,6 +53,78 @@ a {
   margin-bottom: calc(56px + env(safe-area-inset-bottom, 0px));
 }
 
+.map-root .leaflet-popup-content-wrapper,
+.map-root .leaflet-popup-tip {
+  background: var(--color-base-elevated);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-control);
+}
+
+.map-root .leaflet-popup-content {
+  margin: 0.75rem 0.85rem;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.map-root .leaflet-container a.leaflet-popup-close-button {
+  color: var(--color-text-muted);
+}
+
+.ofwx-wx-popup__place {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  margin-bottom: 0.15rem;
+}
+
+.ofwx-wx-popup__meta {
+  margin: 0 0 0.55rem;
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+}
+
+.ofwx-wx-popup__period {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.ofwx-wx-popup__name {
+  font-weight: 600;
+  color: var(--color-weather);
+}
+
+.ofwx-wx-popup__temp {
+  font-size: 1.35rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  font-family: var(--font-display);
+}
+
+.ofwx-wx-popup__wind {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.ofwx-wx-popup__detail {
+  margin: 0.45rem 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.ofwx-wx-popup__next {
+  margin-top: 0.65rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+}
+
+.ofwx-wx-popup--loading {
+  color: var(--color-text-muted);
+}
+
 .chrome {
   position: absolute;
   z-index: 500;

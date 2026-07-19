@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import type { Map as LeafletMap } from 'leaflet';
 import type { LayerPlugin, LeafletLayerHandle } from '@openfirewx/shared';
 import { BASE_PATH } from '@openfirewx/shared';
+import { LongPressWeather } from './LongPressWeather';
 
 export type FireMapProps = {
   plugins: LayerPlugin[];
@@ -120,9 +121,11 @@ export function FireMap({
         basePath={basePath}
       />
       <MapReady onReady={onMapReady} />
+      <LongPressWeather />
       {children}
     </MapContainer>
   );
 }
 
 export { useMap } from 'react-leaflet';
+export { LongPressWeather } from './LongPressWeather';

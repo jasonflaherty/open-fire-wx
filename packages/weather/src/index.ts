@@ -186,3 +186,145 @@ export async function fetchAirNowPm25(options?: {
     source: 'AirNow PM2.5 monitors',
   };
 }
+
+/* -------------------------------------------------------------------------- */
+/* NOAA / NWS point forecast (api.weather.gov)                                */
+/* -------------------------------------------------------------------------- */
+
+export type NoaaForecastPeriod = {
+  name: string;
+  temperature: number;
+  temperatureUnit: string;
+  windSpeed: string;
+  windDirection: string;
+  shortForecast: string;
+  detailedForecast: string;
+  isDaytime: boolean;
+};
+
+export type NoaaPointWeather = {
+  place: string;
+  latitude: number;
+  longitude: number;
+  forecastOffice?: string;
+  periods: NoaaForecastPeriod[];
+};
+
+const NWS_HEADERS = {
+  Accept: 'application/geo+json',
+};
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+export async function fetchNoaaPointWeather(
+  latitude: number,
+  longitude: number,
+): Promise<NoaaPointWeather> {
+  const lat = Number(latitude.toFixed(4));
+  const lon = Number(longitude.toFixed(4));
+  const pointsRes = await fetch(`https://api.weather.gov/points/${lat},${lon}`, {
+    headers: NWS_HEADERS,
+  });
+  if (!pointsRes.ok) {
+    throw new Error(`NWS points failed (${pointsRes.status})`);
+  }
+
+  const points = (await pointsRes.json()) as {
+    properties?: {
+      forecast?: string;
+      cwa?: string;
+      relativeLocation?: {
+        properties?: { city?: string; state?: string };
+      };
+    };
+  };
+
+  const forecastUrl = points.properties?.forecast;
+  if (!forecastUrl) {
+    throw new Error('No NWS forecast for this location');
+  }
+
+  const place = [
+    points.properties?.relativeLocation?.properties?.city,
+    points.properties?.relativeLocation?.properties?.state,
+  ]
+    .filter(Boolean)
+    .join(', ');
+
+  const forecastRes = await fetch(forecastUrl, { headers: NWS_HEADERS });
+  if (!forecastRes.ok) {
+    throw new Error(`NWS forecast failed (${forecastRes.status})`);
+  }
+
+  const forecast = (await forecastRes.json()) as {
+    properties?: {
+      periods?: Array<Record<string, unknown>>;
+    };
+  };
+
+  const periods = (forecast.properties?.periods ?? []).slice(0, 3).map((p) => ({
+    name: String(p.name ?? ''),
+    temperature: Number(p.temperature ?? NaN),
+    temperatureUnit: String(p.temperatureUnit ?? 'F'),
+    windSpeed: String(p.windSpeed ?? ''),
+    windDirection: String(p.windDirection ?? ''),
+    shortForecast: String(p.shortForecast ?? ''),
+    detailedForecast: String(p.detailedForecast ?? ''),
+    isDaytime: Boolean(p.isDaytime),
+  }));
+
+  return {
+    place: place || `${lat}, ${lon}`,
+    latitude: lat,
+    longitude: lon,
+    forecastOffice: points.properties?.cwa,
+    periods,
+  };
+}
+
+export function formatNoaaWeatherPopupHtml(wx: NoaaPointWeather): string {
+  const current = wx.periods[0];
+  const next = wx.periods[1];
+  const rows = [
+    `<div class="ofwx-wx-popup">`,
+    `<strong class="ofwx-wx-popup__place">${escapeHtml(wx.place)}</strong>`,
+    `<p class="ofwx-wx-popup__meta">NOAA / NWS${
+      wx.forecastOffice ? ` · ${escapeHtml(wx.forecastOffice)}` : ''
+    }</p>`,
+  ];
+
+  if (current) {
+    rows.push(
+      `<div class="ofwx-wx-popup__period">`,
+      `<div class="ofwx-wx-popup__name">${escapeHtml(current.name)}</div>`,
+      `<div class="ofwx-wx-popup__temp">${current.temperature}°${escapeHtml(
+        current.temperatureUnit,
+      )}</div>`,
+      `<div>${escapeHtml(current.shortForecast)}</div>`,
+      `<div class="ofwx-wx-popup__wind">Wind ${escapeHtml(current.windDirection)} ${escapeHtml(
+        current.windSpeed,
+      )}</div>`,
+      current.detailedForecast
+        ? `<p class="ofwx-wx-popup__detail">${escapeHtml(current.detailedForecast)}</p>`
+        : '',
+      `</div>`,
+    );
+  }
+
+  if (next) {
+    rows.push(
+      `<div class="ofwx-wx-popup__next"><span>${escapeHtml(next.name)}</span> · ${
+        next.temperature
+      }°${escapeHtml(next.temperatureUnit)} · ${escapeHtml(next.shortForecast)}</div>`,
+    );
+  }
+
+  rows.push(`</div>`);
+  return rows.join('');
+}
