@@ -2,14 +2,19 @@
 /**
  * Fetches ODOT TripCheck closures and writes apps/web/public/data/odot-closures.json
  * for GitHub Pages (TripCheck blocks browser CORS).
+ *
+ * TripCheck is often unreachable from GitHub-hosted runners — on failure we keep
+ * the existing dump (or write an empty collection) so Pages deploys still succeed.
  */
-import { writeFile, mkdir } from 'node:fs/promises';
+import { access, writeFile, mkdir } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const INCD_URL = 'https://www.tripcheck.com/Scripts/map/data/INCD.js';
 const INCD_LINE_URL = 'https://www.tripcheck.com/Scripts/map/data/INCDLine.js';
 const TRIPCHECK_MAP = 'https://www.tripcheck.com/Page/Map';
+const FETCH_TIMEOUT_MS = 25_000;
+const MAX_ATTEMPTS = 3;
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const outPath = join(__dirname, '../apps/web/public/data/odot-closures.json');
@@ -110,43 +115,104 @@ function normalize(feature) {
   };
 }
 
-async function fetchSet(url) {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Upstream HTTP ${res.status} for ${url}`);
-  return res.json();
+async function sleep(ms) {
+  await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function main() {
-  console.log('Fetching ODOT TripCheck closures…');
-  const [pointsSet, linesSet] = await Promise.all([
-    fetchSet(INCD_URL),
-    fetchSet(INCD_LINE_URL),
-  ]);
-
-  const byId = new Map();
-  for (const raw of pointsSet.features ?? []) {
-    const feature = normalize(raw);
-    if (feature) byId.set(feature.properties.id, feature);
+async function fetchSet(url) {
+  let lastError;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const res = await fetch(url, {
+        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+        headers: { 'User-Agent': 'open-fire-wx-refresh/1.0' },
+      });
+      if (!res.ok) throw new Error(`Upstream HTTP ${res.status} for ${url}`);
+      return await res.json();
+    } catch (err) {
+      lastError = err;
+      console.warn(
+        `Attempt ${attempt}/${MAX_ATTEMPTS} failed for ${url}: ${err?.cause?.message ?? err.message}`,
+      );
+      if (attempt < MAX_ATTEMPTS) await sleep(1500 * attempt);
+    }
   }
-  for (const raw of linesSet.features ?? []) {
-    const feature = normalize(raw);
-    if (feature) byId.set(feature.properties.id, feature);
-  }
+  throw lastError;
+}
 
-  const features = [...byId.values()];
+async function fileExists(path) {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function writeEmptyFallback(reason) {
   const collection = {
     type: 'FeatureCollection',
     generatedAt: new Date().toISOString(),
     source: 'ODOT TripCheck',
-    features,
+    features: [],
+    note: reason,
   };
-
   await mkdir(dirname(outPath), { recursive: true });
   await writeFile(outPath, JSON.stringify(collection));
-  console.log(`Wrote ${features.length} closures → ${outPath}`);
+  console.warn(`Wrote empty closures fallback → ${outPath}`);
 }
 
-main().catch((err) => {
+async function main() {
+  console.log('Fetching ODOT TripCheck closures…');
+  try {
+    const [pointsSet, linesSet] = await Promise.all([
+      fetchSet(INCD_URL),
+      fetchSet(INCD_LINE_URL),
+    ]);
+
+    const byId = new Map();
+    for (const raw of pointsSet.features ?? []) {
+      const feature = normalize(raw);
+      if (feature) byId.set(feature.properties.id, feature);
+    }
+    for (const raw of linesSet.features ?? []) {
+      const feature = normalize(raw);
+      if (feature) byId.set(feature.properties.id, feature);
+    }
+
+    const features = [...byId.values()];
+    const collection = {
+      type: 'FeatureCollection',
+      generatedAt: new Date().toISOString(),
+      source: 'ODOT TripCheck',
+      features,
+    };
+
+    await mkdir(dirname(outPath), { recursive: true });
+    await writeFile(outPath, JSON.stringify(collection));
+    console.log(`Wrote ${features.length} closures → ${outPath}`);
+  } catch (err) {
+    console.warn(
+      `ODOT TripCheck unavailable (${err?.cause?.message ?? err.message}).`,
+    );
+    if (await fileExists(outPath)) {
+      console.warn(`Keeping existing dump at ${outPath}`);
+      return;
+    }
+    await writeEmptyFallback('TripCheck unavailable during refresh');
+  }
+}
+
+main().catch(async (err) => {
   console.error(err);
-  process.exit(1);
+  if (await fileExists(outPath)) {
+    console.warn(`Keeping existing dump at ${outPath}`);
+    process.exit(0);
+  }
+  try {
+    await writeEmptyFallback('Unexpected refresh failure');
+    process.exit(0);
+  } catch {
+    process.exit(1);
+  }
 });
