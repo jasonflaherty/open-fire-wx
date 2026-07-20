@@ -7,30 +7,46 @@ import {
   ControlStrip,
   LayerToggle,
   LocateButton,
-  StateSelect,
+  MenuButton,
 } from '@openfirewx/ui';
 import {
   DEFAULT_STATE_CODE,
   PREFERRED_STATE_KEY,
   US_STATE_VIEWS,
+  detectLocale,
+  favoriteIdFromSelection,
   getStateView,
+  isFavoriteId,
+  localeTag,
+  readFavorites,
+  selectionFromFavorite,
+  t as translate,
+  toggleFavorite,
+  writeFavorites,
+  writeLocale,
+  type FavoriteFire,
   type FireSelectPayload,
   type LayerPlugin,
+  type Locale,
+  type MessageKey,
 } from '@openfirewx/shared';
 import type { CircleMarker, Map as LeafletMap } from 'leaflet';
 import { FireInfoSheet } from './FireInfoSheet';
+import { FavoritesSheet } from './FavoritesSheet';
+import { MoreSheet } from './MoreSheet';
 
 const FireMap = dynamic(
   () => import('@openfirewx/map').then((m) => m.FireMap),
   { ssr: false },
 );
 
-const LAYERS = [
-  { id: 'fire-perimeters', label: 'Fires', tone: 'fire' as const },
-  { id: 'firms-hotspots', label: 'Heat', tone: 'hotspot' as const },
-  { id: 'smoke', label: 'Smoke', tone: 'smoke' as const },
-  { id: 'aqi', label: 'AQI', tone: 'aqi' as const },
-  { id: 'noaa-weather', label: 'Radar', tone: 'weather' as const },
+const LAYER_DEFS = [
+  { id: 'fire-perimeters', labelKey: 'layer.fires' as const, tone: 'fire' as const },
+  { id: 'firms-hotspots', labelKey: 'layer.heat' as const, tone: 'hotspot' as const },
+  { id: 'smoke', labelKey: 'layer.smoke' as const, tone: 'smoke' as const },
+  { id: 'aqi', labelKey: 'layer.aqi' as const, tone: 'aqi' as const },
+  { id: 'road-closures', labelKey: 'layer.roads' as const, tone: 'roads' as const },
+  { id: 'noaa-weather', labelKey: 'layer.radar' as const, tone: 'weather' as const },
 ];
 
 function readSavedStateCode(): string {
@@ -59,18 +75,38 @@ export function MapApp() {
   const [ready, setReady] = useState(false);
   const [locating, setLocating] = useState(false);
   const [stateCode, setStateCode] = useState(DEFAULT_STATE_CODE);
+  const [locale, setLocale] = useState<Locale>('en');
   const [bootstrapped, setBootstrapped] = useState(false);
   const [selectedFire, setSelectedFire] = useState<FireSelectPayload | null>(
     null,
   );
+  const [favoritesOpen, setFavoritesOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const [favorites, setFavorites] = useState<FavoriteFire[]>([]);
   const mapRef = useRef<LeafletMap | null>(null);
   const markerRef = useRef<CircleMarker | null>(null);
   const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
 
   const stateView = useMemo(() => getStateView(stateCode), [stateCode]);
+  const tag = useMemo(() => localeTag(locale), [locale]);
+
+  const t = useCallback(
+    (key: MessageKey, vars?: Record<string, string | number>) =>
+      translate(locale, key, vars),
+    [locale],
+  );
+
+  const selectedIsFavorite = useMemo(() => {
+    if (!selectedFire) return false;
+    return isFavoriteId(favorites, favoriteIdFromSelection(selectedFire));
+  }, [favorites, selectedFire]);
 
   useEffect(() => {
+    const nextLocale = detectLocale();
     setStateCode(readSavedStateCode());
+    setFavorites(readFavorites());
+    setLocale(nextLocale);
+    document.documentElement.lang = nextLocale;
     setBootstrapped(true);
   }, []);
 
@@ -82,12 +118,14 @@ export function MapApp() {
         { firmsHotspotsPlugin },
         { smokePlugin },
         { aqiPlugin },
+        { roadClosuresPlugin },
         { noaaWeatherPlugin },
       ] = await Promise.all([
         import('@openfirewx/plugin-fire-perimeters'),
         import('@openfirewx/plugin-firms-hotspots'),
         import('@openfirewx/plugin-smoke'),
         import('@openfirewx/plugin-aqi'),
+        import('@openfirewx/plugin-road-closures'),
         import('@openfirewx/plugin-noaa-weather'),
       ]);
       if (cancelled) return;
@@ -96,6 +134,7 @@ export function MapApp() {
         firmsHotspotsPlugin,
         smokePlugin,
         aqiPlugin,
+        roadClosuresPlugin,
         noaaWeatherPlugin,
       ];
       setPlugins(list);
@@ -114,18 +153,89 @@ export function MapApp() {
     };
   }, []);
 
-  const onMapReady = useCallback((map: LeafletMap) => {
-    mapRef.current = map;
-    map.on('click', () => setSelectedFire(null));
+  const closePanels = useCallback(() => {
+    setSelectedFire(null);
+    setFavoritesOpen(false);
+    setMoreOpen(false);
   }, []);
 
+  const onMapReady = useCallback(
+    (map: LeafletMap) => {
+      mapRef.current = map;
+      map.on('click', () => closePanels());
+    },
+    [closePanels],
+  );
+
   const onFireSelect = useCallback((payload: FireSelectPayload) => {
+    setFavoritesOpen(false);
+    setMoreOpen(false);
     setSelectedFire(payload);
   }, []);
 
   const closeFireSheet = useCallback(() => {
     setSelectedFire(null);
   }, []);
+
+  const closeFavorites = useCallback(() => {
+    setFavoritesOpen(false);
+  }, []);
+
+  const closeMore = useCallback(() => {
+    setMoreOpen(false);
+  }, []);
+
+  const onToggleFavorite = useCallback(() => {
+    if (!selectedFire) return;
+    setFavorites((prev) => {
+      const next = toggleFavorite(prev, selectedFire);
+      writeFavorites(next);
+      return next;
+    });
+  }, [selectedFire]);
+
+  const onRemoveFavorite = useCallback((id: string) => {
+    setFavorites((prev) => {
+      const next = prev.filter((f) => f.id !== id);
+      writeFavorites(next);
+      return next;
+    });
+  }, []);
+
+  const onSelectFavorite = useCallback((favorite: FavoriteFire) => {
+    const selection = selectionFromFavorite(favorite);
+    setFavoritesOpen(false);
+    setMoreOpen(false);
+    setSelectedFire(selection);
+    mapRef.current?.flyTo(
+      [favorite.lat, favorite.lng],
+      Math.max(mapRef.current.getZoom(), 10),
+      { duration: 0.7 },
+    );
+  }, []);
+
+  function toggleMore() {
+    setMoreOpen((open) => {
+      const next = !open;
+      if (next) {
+        setSelectedFire(null);
+        setFavoritesOpen(false);
+      }
+      return next;
+    });
+  }
+
+  function openFavoritesFromMore() {
+    setMoreOpen(false);
+    setSelectedFire(null);
+    setFavoritesOpen(true);
+  }
+
+  function onLocaleChange(next: Locale) {
+    setLocale(next);
+    writeLocale(next);
+    document.documentElement.lang = next;
+  }
 
   function toggle(id: string) {
     setEnabled((prev) => {
@@ -150,7 +260,7 @@ export function MapApp() {
     const map = mapRef.current;
     if (!map || locating) return;
     if (!navigator.geolocation) {
-      window.alert('Location is not available in this browser.');
+      window.alert(t('locate.unavailable'));
       return;
     }
 
@@ -169,7 +279,7 @@ export function MapApp() {
         fillOpacity: 0.85,
         weight: 2,
       })
-        .bindPopup('You are here')
+        .bindPopup(t('locate.here'))
         .addTo(map);
 
       setLocating(false);
@@ -177,7 +287,7 @@ export function MapApp() {
 
     map.once('locationerror', () => {
       setLocating(false);
-      window.alert('Could not find your location. Check browser permissions.');
+      window.alert(t('locate.failed'));
     });
 
     map.locate({
@@ -187,13 +297,18 @@ export function MapApp() {
     });
   }
 
-  // Wait for localStorage read so the first paint uses the saved state
   if (!bootstrapped) {
     return <div className="shell" aria-busy="true" />;
   }
 
+  const sheetOpen = Boolean(selectedFire) || favoritesOpen || moreOpen;
+  const menuLabel =
+    favorites.length > 0
+      ? t('chrome.moreWithFavorites', { count: favorites.length })
+      : t('chrome.more');
+
   return (
-    <div className="shell" data-sheet={selectedFire ? 'open' : 'closed'}>
+    <div className="shell" data-sheet={sheetOpen ? 'open' : 'closed'}>
       {ready ? (
         <FireMap
           className="map-root"
@@ -208,20 +323,23 @@ export function MapApp() {
       ) : (
         <div className="map-root" aria-busy="true" />
       )}
-      <header className="chrome" aria-label="Map controls">
+      <header className="chrome" aria-label={t('chrome.mapControls')}>
         <div className="chrome__bar">
-          <Brand name="Fire WX" tagline={undefined} />
-          <StateSelect
-            value={stateCode}
-            options={US_STATE_VIEWS}
-            onChange={onStateChange}
-          />
+          <Brand name={t('brand.name')} tagline={undefined} />
+          <div className="chrome__tools">
+            <MenuButton
+              active={moreOpen}
+              badgeCount={favorites.length}
+              label={menuLabel}
+              onClick={toggleMore}
+            />
+          </div>
         </div>
         <ControlStrip className="chrome__layers">
-          {LAYERS.map((layer) => (
+          {LAYER_DEFS.map((layer) => (
             <LayerToggle
               key={layer.id}
-              label={layer.label}
+              label={t(layer.labelKey)}
               active={enabled.includes(layer.id)}
               tone={layer.tone}
               onClick={() => toggle(layer.id)}
@@ -230,9 +348,41 @@ export function MapApp() {
         </ControlStrip>
       </header>
       <div className="locate-wrap">
-        <LocateButton locating={locating} onClick={() => void locateMe()} />
+        <LocateButton
+          locating={locating}
+          aria-label={locating ? t('locate.finding') : t('locate.label')}
+          title={t('locate.label')}
+          onClick={() => void locateMe()}
+        />
       </div>
-      <FireInfoSheet selection={selectedFire} onClose={closeFireSheet} />
+      <MoreSheet
+        open={moreOpen}
+        onClose={closeMore}
+        locale={locale}
+        onLocaleChange={onLocaleChange}
+        stateCode={stateCode}
+        onStateChange={onStateChange}
+        favoritesCount={favorites.length}
+        onOpenFavorites={openFavoritesFromMore}
+        t={t}
+      />
+      <FireInfoSheet
+        selection={selectedFire}
+        onClose={closeFireSheet}
+        favorited={selectedIsFavorite}
+        onToggleFavorite={onToggleFavorite}
+        localeTag={tag}
+        t={t}
+      />
+      <FavoritesSheet
+        open={favoritesOpen}
+        favorites={favorites}
+        onClose={closeFavorites}
+        onSelect={onSelectFavorite}
+        onRemove={onRemoveFavorite}
+        localeTag={tag}
+        t={t}
+      />
     </div>
   );
 }

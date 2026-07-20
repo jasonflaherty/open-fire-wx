@@ -94,3 +94,28 @@ export {
 } from './states';
 
 export const PREFERRED_STATE_KEY = 'ofwx.preferredState';
+
+export {
+  FAVORITES_KEY,
+  favoriteFromSelection,
+  favoriteIdFromSelection,
+  isFavoriteId,
+  readFavorites,
+  selectionFromFavorite,
+  toggleFavorite,
+  writeFavorites,
+  type FavoriteFire,
+} from './favorites';
+
+export {
+  LOCALES,
+  LOCALE_KEY,
+  detectLocale,
+  isLocale,
+  localeTag,
+  readLocale,
+  t,
+  writeLocale,
+  type Locale,
+  type MessageKey,
+} from './i18n';

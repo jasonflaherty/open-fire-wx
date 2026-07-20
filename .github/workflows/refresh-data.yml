@@ -19,7 +19,8 @@ jobs:
           node-version: 22
       - run: node scripts/refresh-fire-data.mjs
       - run: node scripts/refresh-hotspots.mjs
+      - run: node scripts/refresh-odot-closures.mjs
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: 'chore: refresh fire and hotspot data'
-          file_pattern: apps/web/public/data/fires.json apps/web/public/data/hotspots.json
+          commit_message: 'chore: refresh fire, hotspot, and ODOT closure data'
+          file_pattern: apps/web/public/data/fires.json apps/web/public/data/hotspots.json apps/web/public/data/odot-closures.json

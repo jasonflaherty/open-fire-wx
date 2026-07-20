@@ -71,6 +71,8 @@ Burn scars, terrain, elevation, hillshade — useful for spread context and late
 ## Evacuations & road closures
 Vary by state/county. Plugin-per-region (Caltrans, ODOT, WSDOT, county OEM feeds).
 
+**Oregon (live):** `plugins/road-closures` uses ODOT TripCheck incident feeds (`INCD` / `INCDLine`), filtered to closures / conditional closures. TripCheck blocks browser CORS, so Pages serves a refreshed `public/data/odot-closures.json` from CI (`pnpm refresh-odot-closures`).
+
 ## Basemaps
 Avoid Google Maps (licensing/cost). Prefer: OpenStreetMap, MapLibre/OpenFreeMap, OpenTopoMap, USGS topo, ESRI imagery (check license).
 

@@ -22,7 +22,7 @@ export function Brand({ name = 'Fire WX', tagline }: BrandProps) {
 export type LayerToggleProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   label: string;
   active: boolean;
-  tone?: 'fire' | 'weather' | 'hotspot' | 'smoke' | 'aqi';
+  tone?: 'fire' | 'weather' | 'hotspot' | 'smoke' | 'aqi' | 'roads';
 };
 
 export function LayerToggle({
@@ -72,17 +72,29 @@ export type StateSelectProps = {
   options: Array<{ code: string; name: string }>;
   onChange: (code: string) => void;
   id?: string;
+  label?: string;
+  ariaLabel?: string;
+  /** Stretch to full width inside the More menu. */
+  wide?: boolean;
 };
 
-export function StateSelect({ value, options, onChange, id }: StateSelectProps) {
+export function StateSelect({
+  value,
+  options,
+  onChange,
+  id,
+  label = 'State',
+  ariaLabel = 'Map state',
+  wide = false,
+}: StateSelectProps) {
   return (
-    <label className="ofwx-state">
-      <span className="ofwx-state__label">State</span>
+    <label className="ofwx-state" data-wide={wide || undefined}>
+      <span className="ofwx-state__label">{label}</span>
       <select
         id={id}
         className="ofwx-state__select"
         value={value}
-        aria-label="Map state"
+        aria-label={ariaLabel}
         onChange={(event) => onChange(event.target.value)}
       >
         {options.map((option) => (
@@ -139,6 +151,8 @@ export type BottomSheetProps = {
   title: string;
   children: ReactNode;
   footer?: ReactNode;
+  /** Extra controls shown before the close button (e.g. favorite, refresh). */
+  actions?: ReactNode;
 };
 
 export function BottomSheet({
@@ -147,6 +161,7 @@ export function BottomSheet({
   title,
   children,
   footer,
+  actions,
 }: BottomSheetProps) {
   const titleId = useId();
 
@@ -164,7 +179,7 @@ export function BottomSheet({
       <button
         type="button"
         className="ofwx-sheet__backdrop"
-        aria-label="Close fire details"
+        aria-label="Close"
         tabIndex={open ? 0 : -1}
         onClick={onClose}
       />
@@ -179,18 +194,95 @@ export function BottomSheet({
           <h2 id={titleId} className="ofwx-sheet__title">
             {title}
           </h2>
-          <button
-            type="button"
-            className="ofwx-sheet__close"
-            aria-label="Close"
-            onClick={onClose}
-          >
-            ×
-          </button>
+          <div className="ofwx-sheet__actions">
+            {actions}
+            <button
+              type="button"
+              className="ofwx-sheet__action ofwx-sheet__close"
+              aria-label="Close"
+              onClick={onClose}
+            >
+              ×
+            </button>
+          </div>
         </header>
         <div className="ofwx-sheet__body">{children}</div>
         {footer ? <footer className="ofwx-sheet__footer">{footer}</footer> : null}
       </div>
+    </div>
+  );
+}
+
+export type MenuButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
+  active?: boolean;
+  badgeCount?: number;
+  label?: string;
+};
+
+/** Single chrome entry for secondary controls (region, language, favorites). */
+export function MenuButton({
+  active = false,
+  badgeCount = 0,
+  label = 'Menu',
+  ...rest
+}: MenuButtonProps) {
+  return (
+    <button
+      type="button"
+      className="ofwx-menu-btn"
+      data-active={active}
+      aria-pressed={active}
+      aria-label={label}
+      title={label}
+      {...rest}
+    >
+      <svg
+        className="ofwx-menu-btn__icon"
+        viewBox="0 0 24 24"
+        width="18"
+        height="18"
+        aria-hidden="true"
+      >
+        <circle cx="5" cy="12" r="1.75" fill="currentColor" />
+        <circle cx="12" cy="12" r="1.75" fill="currentColor" />
+        <circle cx="19" cy="12" r="1.75" fill="currentColor" />
+      </svg>
+      {badgeCount > 0 ? (
+        <span className="ofwx-menu-btn__count">
+          {badgeCount > 99 ? '99+' : badgeCount}
+        </span>
+      ) : null}
+    </button>
+  );
+}
+
+export type LocaleToggleProps = {
+  value: string;
+  options: Array<{ code: string; label: string }>;
+  onChange: (code: string) => void;
+  ariaLabel?: string;
+};
+
+export function LocaleToggle({
+  value,
+  options,
+  onChange,
+  ariaLabel = 'Language',
+}: LocaleToggleProps) {
+  return (
+    <div className="ofwx-locale" role="group" aria-label={ariaLabel}>
+      {options.map((option) => (
+        <button
+          key={option.code}
+          type="button"
+          className="ofwx-locale__btn"
+          data-active={value === option.code}
+          aria-pressed={value === option.code}
+          onClick={() => onChange(option.code)}
+        >
+          {option.label}
+        </button>
+      ))}
     </div>
   );
 }

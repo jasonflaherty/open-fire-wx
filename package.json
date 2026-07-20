@@ -10,9 +10,10 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
-    "refresh-data": "node scripts/refresh-fire-data.mjs && node scripts/refresh-hotspots.mjs",
+    "refresh-data": "node scripts/refresh-fire-data.mjs && node scripts/refresh-hotspots.mjs && node scripts/refresh-odot-closures.mjs",
     "refresh-fires": "node scripts/refresh-fire-data.mjs",
-    "refresh-hotspots": "node scripts/refresh-hotspots.mjs"
+    "refresh-hotspots": "node scripts/refresh-hotspots.mjs",
+    "refresh-odot-closures": "node scripts/refresh-odot-closures.mjs"
   },
   "devDependencies": {
     "prettier": "^3.4.2",

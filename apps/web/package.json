@@ -18,6 +18,7 @@
     "@openfirewx/plugin-fire-perimeters": "workspace:*",
     "@openfirewx/plugin-firms-hotspots": "workspace:*",
     "@openfirewx/plugin-noaa-weather": "workspace:*",
+    "@openfirewx/plugin-road-closures": "workspace:*",
     "@openfirewx/plugin-smoke": "workspace:*",
     "@openfirewx/shared": "workspace:*",
     "@openfirewx/ui": "workspace:*",

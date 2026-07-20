@@ -165,8 +165,8 @@ export function matchInciwebNewsForFire(
 
 export async function fetchInciwebNewsForFire(
   fireName: string,
-  options?: { state?: string; limit?: number },
+  options?: { state?: string; limit?: number; force?: boolean },
 ): Promise<{ items: InciwebNewsItem[]; incidentUrl?: string; incidentSlug?: string }> {
-  const feed = await fetchInciwebPublicationFeed();
+  const feed = await fetchInciwebPublicationFeed({ force: options?.force });
   return matchInciwebNewsForFire(feed, fireName, options);
 }

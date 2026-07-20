@@ -43,6 +43,9 @@ importers:
       '@openfirewx/plugin-noaa-weather':
         specifier: workspace:*
         version: link:../../plugins/noaa-weather
+      '@openfirewx/plugin-road-closures':
+        specifier: workspace:*
+        version: link:../../plugins/road-closures
       '@openfirewx/plugin-smoke':
         specifier: workspace:*
         version: link:../../plugins/smoke
@@ -87,6 +90,16 @@ importers:
   design-system: {}
 
   packages/charts:
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/community:
+    dependencies:
+      '@openfirewx/shared':
+        specifier: workspace:*
+        version: link:../shared
     devDependencies:
       typescript:
         specifier: ^5.7.2
@@ -234,6 +247,25 @@ importers:
       '@openfirewx/weather':
         specifier: workspace:*
         version: link:../../packages/weather
+      leaflet:
+        specifier: ^1.9.4
+        version: 1.9.4
+    devDependencies:
+      '@types/leaflet':
+        specifier: ^1.9.15
+        version: 1.9.21
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  plugins/road-closures:
+    dependencies:
+      '@openfirewx/community':
+        specifier: workspace:*
+        version: link:../../packages/community
+      '@openfirewx/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       leaflet:
         specifier: ^1.9.4
         version: 1.9.4
