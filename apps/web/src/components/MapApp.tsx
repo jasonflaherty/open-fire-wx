@@ -45,7 +45,9 @@ const LAYER_DEFS = [
   { id: 'firms-hotspots', labelKey: 'layer.heat' as const, tone: 'hotspot' as const },
   { id: 'smoke', labelKey: 'layer.smoke' as const, tone: 'smoke' as const },
   { id: 'aqi', labelKey: 'layer.aqi' as const, tone: 'aqi' as const },
+  { id: 'evacuations', labelKey: 'layer.evac' as const, tone: 'evac' as const },
   { id: 'road-closures', labelKey: 'layer.roads' as const, tone: 'roads' as const },
+  { id: 'shelters', labelKey: 'layer.shelters' as const, tone: 'shelter' as const },
   { id: 'noaa-weather', labelKey: 'layer.radar' as const, tone: 'weather' as const },
 ];
 
@@ -118,14 +120,18 @@ export function MapApp() {
         { firmsHotspotsPlugin },
         { smokePlugin },
         { aqiPlugin },
+        { evacuationsPlugin },
         { roadClosuresPlugin },
+        { sheltersPlugin },
         { noaaWeatherPlugin },
       ] = await Promise.all([
         import('@openfirewx/plugin-fire-perimeters'),
         import('@openfirewx/plugin-firms-hotspots'),
         import('@openfirewx/plugin-smoke'),
         import('@openfirewx/plugin-aqi'),
+        import('@openfirewx/plugin-evacuations'),
         import('@openfirewx/plugin-road-closures'),
+        import('@openfirewx/plugin-shelters'),
         import('@openfirewx/plugin-noaa-weather'),
       ]);
       if (cancelled) return;
@@ -134,7 +140,9 @@ export function MapApp() {
         firmsHotspotsPlugin,
         smokePlugin,
         aqiPlugin,
+        evacuationsPlugin,
         roadClosuresPlugin,
+        sheltersPlugin,
         noaaWeatherPlugin,
       ];
       setPlugins(list);
@@ -373,6 +381,7 @@ export function MapApp() {
         onToggleFavorite={onToggleFavorite}
         localeTag={tag}
         t={t}
+        basePath={basePath}
       />
       <FavoritesSheet
         open={favoritesOpen}

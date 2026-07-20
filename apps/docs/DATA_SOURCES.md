@@ -71,7 +71,13 @@ Burn scars, terrain, elevation, hillshade — useful for spread context and late
 ## Evacuations & road closures
 Vary by state/county. Plugin-per-region (Caltrans, ODOT, WSDOT, county OEM feeds).
 
-**Oregon (live):** `plugins/road-closures` uses ODOT TripCheck incident feeds (`INCD` / `INCDLine`), filtered to closures / conditional closures. TripCheck blocks browser CORS, so Pages serves a refreshed `public/data/odot-closures.json` from CI (`pnpm refresh-odot-closures`).
+**Oregon roads:** `plugins/road-closures` uses ODOT TripCheck incident feeds (`INCD` / `INCDLine`), filtered to closures / conditional closures. TripCheck blocks browser CORS, so Pages serves a refreshed `public/data/odot-closures.json` from CI (`pnpm refresh-odot-closures`).
+
+**Oregon evacuations:** `plugins/evacuations` maps Oregon OEM `Fire_Evacuation_Areas_Public` Ready/Set/Go polygons for **Deschutes** and **Jackson** only (`public/data/evacuations-or.json`, `pnpm refresh-evacuations`). Coverage is labeled in the UI; empty counties are “no data,” never invented levels.
+
+**Oregon shelters:** `plugins/shelters` uses a curated pet/livestock-capable set plus sparse Oregon OEM shelter points when published (`public/data/shelters-or.json`, `pnpm refresh-shelters`). Status defaults to `unknown` unless OEM lists an active shelter. Always confirm with county OEM before travel.
+
+The fire details sheet surfaces nearby evacuations, ODOT closures (~50 km), and the closest shelters without turning those layers on.
 
 ## Basemaps
 Avoid Google Maps (licensing/cost). Prefer: OpenStreetMap, MapLibre/OpenFreeMap, OpenTopoMap, USGS topo, ESRI imagery (check license).

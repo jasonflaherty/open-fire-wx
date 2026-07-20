@@ -15,6 +15,8 @@ const en = {
   'layer.aqi': 'AQI',
   'layer.radar': 'Radar',
   'layer.roads': 'Roads',
+  'layer.evac': 'Evac',
+  'layer.shelters': 'Shelters',
 
   'more.title': 'Menu',
   'more.region': 'Region',
@@ -62,6 +64,20 @@ const en = {
   'fire.close': 'Close',
   'fire.unnamed': 'Fire',
 
+  'fire.evacHeading': 'Evacuation',
+  'fire.evacCoverage': 'Evac data: OR (Deschutes, Jackson)',
+  'fire.evacEmpty': 'No evacuation zones for this location in covered counties.',
+  'fire.evacLoading': 'Checking evacuation zones…',
+  'fire.roadsHeading': 'Nearby road closures',
+  'fire.roadsEmpty': 'No ODOT closures within 50 km.',
+  'fire.roadsLoading': 'Checking road closures…',
+  'fire.sheltersHeading': 'Nearby shelters',
+  'fire.sheltersEmpty': 'No listed shelters nearby.',
+  'fire.sheltersLoading': 'Checking shelters…',
+  'fire.sheltersDisclaimer': 'Confirm with county OEM before you go.',
+  'fire.kmAway': '{km} km away',
+  'fire.source': 'Source',
+
   'common.close': 'Close',
 } as const;
 
@@ -79,6 +95,8 @@ const es: Record<MessageKey, string> = {
   'layer.aqi': 'AQI',
   'layer.radar': 'Radar',
   'layer.roads': 'Rutas',
+  'layer.evac': 'Evac',
+  'layer.shelters': 'Refugios',
 
   'more.title': 'Menú',
   'more.region': 'Región',
@@ -127,6 +145,21 @@ const es: Record<MessageKey, string> = {
   'fire.refresh': 'Actualizar información del incendio',
   'fire.close': 'Cerrar',
   'fire.unnamed': 'Incendio',
+
+  'fire.evacHeading': 'Evacuación',
+  'fire.evacCoverage': 'Datos de evac: OR (Deschutes, Jackson)',
+  'fire.evacEmpty':
+    'No hay zonas de evacuación para esta ubicación en los condados cubiertos.',
+  'fire.evacLoading': 'Buscando zonas de evacuación…',
+  'fire.roadsHeading': 'Cierres de ruta cercanos',
+  'fire.roadsEmpty': 'No hay cierres ODOT a menos de 50 km.',
+  'fire.roadsLoading': 'Buscando cierres de ruta…',
+  'fire.sheltersHeading': 'Refugios cercanos',
+  'fire.sheltersEmpty': 'No hay refugios listados cerca.',
+  'fire.sheltersLoading': 'Buscando refugios…',
+  'fire.sheltersDisclaimer': 'Confirma con el OEM del condado antes de ir.',
+  'fire.kmAway': 'a {km} km',
+  'fire.source': 'Fuente',
 
   'common.close': 'Cerrar',
 };

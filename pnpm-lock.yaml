@@ -22,6 +22,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@openfirewx/community':
+        specifier: workspace:*
+        version: link:../../packages/community
       '@openfirewx/design-system':
         specifier: workspace:*
         version: link:../../design-system
@@ -34,6 +37,9 @@ importers:
       '@openfirewx/plugin-aqi':
         specifier: workspace:*
         version: link:../../plugins/aqi
+      '@openfirewx/plugin-evacuations':
+        specifier: workspace:*
+        version: link:../../plugins/evacuations
       '@openfirewx/plugin-fire-perimeters':
         specifier: workspace:*
         version: link:../../plugins/fire-perimeters
@@ -46,6 +52,9 @@ importers:
       '@openfirewx/plugin-road-closures':
         specifier: workspace:*
         version: link:../../plugins/road-closures
+      '@openfirewx/plugin-shelters':
+        specifier: workspace:*
+        version: link:../../plugins/shelters
       '@openfirewx/plugin-smoke':
         specifier: workspace:*
         version: link:../../plugins/smoke
@@ -201,6 +210,25 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
 
+  plugins/evacuations:
+    dependencies:
+      '@openfirewx/community':
+        specifier: workspace:*
+        version: link:../../packages/community
+      '@openfirewx/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      leaflet:
+        specifier: ^1.9.4
+        version: 1.9.4
+    devDependencies:
+      '@types/leaflet':
+        specifier: ^1.9.15
+        version: 1.9.21
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
   plugins/fire-perimeters:
     dependencies:
       '@openfirewx/fire':
@@ -259,6 +287,25 @@ importers:
         version: 5.9.3
 
   plugins/road-closures:
+    dependencies:
+      '@openfirewx/community':
+        specifier: workspace:*
+        version: link:../../packages/community
+      '@openfirewx/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      leaflet:
+        specifier: ^1.9.4
+        version: 1.9.4
+    devDependencies:
+      '@types/leaflet':
+        specifier: ^1.9.15
+        version: 1.9.21
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  plugins/shelters:
     dependencies:
       '@openfirewx/community':
         specifier: workspace:*

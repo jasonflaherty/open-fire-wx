@@ -11,14 +11,17 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@openfirewx/community": "workspace:*",
     "@openfirewx/design-system": "workspace:*",
     "@openfirewx/fire": "workspace:*",
     "@openfirewx/map": "workspace:*",
     "@openfirewx/plugin-aqi": "workspace:*",
+    "@openfirewx/plugin-evacuations": "workspace:*",
     "@openfirewx/plugin-fire-perimeters": "workspace:*",
     "@openfirewx/plugin-firms-hotspots": "workspace:*",
     "@openfirewx/plugin-noaa-weather": "workspace:*",
     "@openfirewx/plugin-road-closures": "workspace:*",
+    "@openfirewx/plugin-shelters": "workspace:*",
     "@openfirewx/plugin-smoke": "workspace:*",
     "@openfirewx/shared": "workspace:*",
     "@openfirewx/ui": "workspace:*",

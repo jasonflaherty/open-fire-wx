@@ -7,7 +7,20 @@ import {
   type InciwebNewsItem,
 } from '@openfirewx/fire';
 import {
+  evacLevelLabel,
+  findClosuresNear,
+  findEvacZonesNear,
+  findSheltersNear,
+  type EvacZoneCollection,
+  type EvacZoneFeature,
+  type RoadClosureCollection,
+  type RoadClosureFeature,
+  type ShelterCollection,
+  type ShelterFeature,
+} from '@openfirewx/community';
+import {
   favoriteIdFromSelection,
+  withHourlyCacheBust,
   type FireSelectPayload,
   type MessageKey,
 } from '@openfirewx/shared';
@@ -23,6 +36,8 @@ function formatUpdated(value: unknown, localeTag: string): string | null {
     const d = new Date(asNum);
     return Number.isNaN(d.getTime()) ? String(value) : d.toLocaleString(localeTag);
   }
+  const d = new Date(String(value));
+  if (!Number.isNaN(d.getTime())) return d.toLocaleString(localeTag);
   return String(value);
 }
 
@@ -82,6 +97,18 @@ function RefreshIcon() {
   );
 }
 
+async function loadJsonCollection<T>(url: string): Promise<T | null> {
+  try {
+    const res = await fetch(withHourlyCacheBust(url), { cache: 'no-store' });
+    if (!res.ok) return null;
+    return (await res.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
+type NearState = 'idle' | 'loading' | 'ready';
+
 export type FireInfoSheetProps = {
   selection: FireSelectPayload | null;
   onClose: () => void;
@@ -89,6 +116,7 @@ export type FireInfoSheetProps = {
   onToggleFavorite: () => void;
   localeTag: string;
   t: (key: MessageKey, vars?: Record<string, string | number>) => string;
+  basePath?: string;
 };
 
 export function FireInfoSheet({
@@ -98,6 +126,7 @@ export function FireInfoSheet({
   onToggleFavorite,
   localeTag,
   t,
+  basePath = '',
 }: FireInfoSheetProps) {
   const open = Boolean(selection);
   const props = selection?.properties;
@@ -111,6 +140,20 @@ export function FireInfoSheet({
     'idle',
   );
   const [refreshing, setRefreshing] = useState(false);
+
+  const [nearState, setNearState] = useState<NearState>('idle');
+  const [evacZones, setEvacZones] = useState<EvacZoneFeature[]>([]);
+  const [evacGeneratedAt, setEvacGeneratedAt] = useState<string | undefined>();
+  const [roadsNear, setRoadsNear] = useState<
+    Array<RoadClosureFeature & { distanceKm: number }>
+  >([]);
+  const [roadsGeneratedAt, setRoadsGeneratedAt] = useState<string | undefined>();
+  const [sheltersNear, setSheltersNear] = useState<
+    Array<ShelterFeature & { distanceKm: number }>
+  >([]);
+  const [sheltersGeneratedAt, setSheltersGeneratedAt] = useState<
+    string | undefined
+  >();
 
   const loadNews = useCallback(
     async (force: boolean) => {
@@ -172,6 +215,50 @@ export function FireInfoSheet({
       cancelled = true;
     };
   }, [selectionKey, selection, queryName]);
+
+  useEffect(() => {
+    if (!selection) {
+      setNearState('idle');
+      setEvacZones([]);
+      setRoadsNear([]);
+      setSheltersNear([]);
+      setEvacGeneratedAt(undefined);
+      setRoadsGeneratedAt(undefined);
+      setSheltersGeneratedAt(undefined);
+      return;
+    }
+
+    let cancelled = false;
+    setNearState('loading');
+    const point = selection.latlng;
+
+    void (async () => {
+      const [evac, roads, shelters] = await Promise.all([
+        loadJsonCollection<EvacZoneCollection>(
+          `${basePath}/data/evacuations-or.json`,
+        ),
+        loadJsonCollection<RoadClosureCollection>(
+          `${basePath}/data/odot-closures.json`,
+        ),
+        loadJsonCollection<ShelterCollection>(`${basePath}/data/shelters-or.json`),
+      ]);
+      if (cancelled) return;
+
+      setEvacZones(evac ? findEvacZonesNear(evac, point) : []);
+      setEvacGeneratedAt(evac?.generatedAt);
+      setRoadsNear(roads ? findClosuresNear(roads, point, { maxKm: 50, limit: 5 }) : []);
+      setRoadsGeneratedAt(roads?.generatedAt);
+      setSheltersNear(
+        shelters ? findSheltersNear(shelters, point, { limit: 3 }) : [],
+      );
+      setSheltersGeneratedAt(shelters?.generatedAt);
+      setNearState('ready');
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectionKey, selection, basePath]);
 
   const acres =
     props?.acres != null
@@ -266,6 +353,189 @@ export function FireInfoSheet({
             {Math.round(props.personnel).toLocaleString(localeTag)}
           </p>
         ) : null}
+
+        <section className="fire-sheet__near" aria-label={t('fire.evacHeading')}>
+          <h3 className="fire-sheet__near-heading">{t('fire.evacHeading')}</h3>
+          <p className="fire-sheet__near-coverage">{t('fire.evacCoverage')}</p>
+          {nearState === 'loading' ? (
+            <p className="fire-sheet__near-status">{t('fire.evacLoading')}</p>
+          ) : null}
+          {nearState === 'ready' && evacZones.length === 0 ? (
+            <p className="fire-sheet__near-status">{t('fire.evacEmpty')}</p>
+          ) : null}
+          {evacZones.length > 0 ? (
+            <ul className="fire-sheet__near-list">
+              {evacZones.map((zone) => {
+                const zoneUpdated = formatUpdated(
+                  zone.properties.updatedAt ?? evacGeneratedAt,
+                  localeTag,
+                );
+                return (
+                  <li key={zone.properties.id} className="fire-sheet__near-item">
+                    <div className="fire-sheet__near-title">
+                      {evacLevelLabel(zone.properties.level)}
+                    </div>
+                    <div className="fire-sheet__near-detail">{zone.properties.name}</div>
+                    {zone.properties.county ? (
+                      <div className="fire-sheet__near-meta">
+                        {zone.properties.county}
+                        {zone.properties.fireName
+                          ? ` · ${zone.properties.fireName}`
+                          : ''}
+                      </div>
+                    ) : null}
+                    <div className="fire-sheet__near-source">
+                      {zone.properties.sourceUrl ? (
+                        <a
+                          href={zone.properties.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {zone.properties.source}
+                        </a>
+                      ) : (
+                        <span>
+                          {t('fire.source')}: {zone.properties.source}
+                        </span>
+                      )}
+                      {zoneUpdated ? ` · ${zoneUpdated}` : null}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+        </section>
+
+        <section className="fire-sheet__near" aria-label={t('fire.roadsHeading')}>
+          <h3 className="fire-sheet__near-heading">{t('fire.roadsHeading')}</h3>
+          {nearState === 'loading' ? (
+            <p className="fire-sheet__near-status">{t('fire.roadsLoading')}</p>
+          ) : null}
+          {nearState === 'ready' && roadsNear.length === 0 ? (
+            <p className="fire-sheet__near-status">{t('fire.roadsEmpty')}</p>
+          ) : null}
+          {roadsNear.length > 0 ? (
+            <ul className="fire-sheet__near-list">
+              {roadsNear.map((road) => {
+                const title =
+                  road.properties.name ||
+                  road.properties.route ||
+                  'Road closure';
+                const roadUpdated = formatUpdated(
+                  road.properties.updated ?? roadsGeneratedAt,
+                  localeTag,
+                );
+                return (
+                  <li
+                    key={road.properties.id}
+                    className="fire-sheet__near-item"
+                  >
+                    <div className="fire-sheet__near-title">{title}</div>
+                    {road.properties.route && road.properties.name ? (
+                      <div className="fire-sheet__near-detail">
+                        {road.properties.route}
+                      </div>
+                    ) : null}
+                    <div className="fire-sheet__near-meta">
+                      {t('fire.kmAway', {
+                        km: road.distanceKm.toFixed(0),
+                      })}
+                      {road.properties.statusLabel
+                        ? ` · ${road.properties.statusLabel}`
+                        : road.properties.status
+                          ? ` · ${road.properties.status}`
+                          : ''}
+                    </div>
+                    <div className="fire-sheet__near-source">
+                      {road.properties.tripcheckUrl ? (
+                        <a
+                          href={road.properties.tripcheckUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {road.properties.source}
+                        </a>
+                      ) : (
+                        <span>
+                          {t('fire.source')}: {road.properties.source}
+                        </span>
+                      )}
+                      {roadUpdated ? ` · ${roadUpdated}` : null}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+        </section>
+
+        <section
+          className="fire-sheet__near"
+          aria-label={t('fire.sheltersHeading')}
+        >
+          <h3 className="fire-sheet__near-heading">{t('fire.sheltersHeading')}</h3>
+          <p className="fire-sheet__near-disclaimer">
+            {t('fire.sheltersDisclaimer')}
+          </p>
+          {nearState === 'loading' ? (
+            <p className="fire-sheet__near-status">{t('fire.sheltersLoading')}</p>
+          ) : null}
+          {nearState === 'ready' && sheltersNear.length === 0 ? (
+            <p className="fire-sheet__near-status">{t('fire.sheltersEmpty')}</p>
+          ) : null}
+          {sheltersNear.length > 0 ? (
+            <ul className="fire-sheet__near-list">
+              {sheltersNear.map((shelter) => {
+                const shelterUpdated = formatUpdated(
+                  shelter.properties.updatedAt ?? sheltersGeneratedAt,
+                  localeTag,
+                );
+                return (
+                  <li
+                    key={shelter.properties.id}
+                    className="fire-sheet__near-item"
+                  >
+                    <div className="fire-sheet__near-title">
+                      {shelter.properties.name}
+                    </div>
+                    {shelter.properties.address ? (
+                      <div className="fire-sheet__near-detail">
+                        {shelter.properties.address}
+                      </div>
+                    ) : null}
+                    <div className="fire-sheet__near-meta">
+                      {t('fire.kmAway', {
+                        km: shelter.distanceKm.toFixed(0),
+                      })}
+                      {shelter.properties.petsAllowed === true
+                        ? ' · Pets OK'
+                        : shelter.properties.livestockAllowed === true
+                          ? ' · Livestock capable'
+                          : ''}
+                    </div>
+                    <div className="fire-sheet__near-source">
+                      {shelter.properties.sourceUrl ? (
+                        <a
+                          href={shelter.properties.sourceUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {shelter.properties.source}
+                        </a>
+                      ) : (
+                        <span>
+                          {t('fire.source')}: {shelter.properties.source}
+                        </span>
+                      )}
+                      {shelterUpdated ? ` · ${shelterUpdated}` : null}
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+        </section>
 
         <section
           className="fire-sheet__news"

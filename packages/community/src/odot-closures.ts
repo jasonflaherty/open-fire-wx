@@ -1,4 +1,5 @@
 import { withHourlyCacheBust } from '@openfirewx/shared';
+import { haversineKm } from './geo';
 
 /** ODOT TripCheck live incident feeds (ArcGIS JSON over .js URLs). */
 export const ODOT_INCD_URL =
@@ -258,4 +259,42 @@ export function closureColor(status: RoadClosureStatus | undefined): string {
     default:
       return '#c1121f';
   }
+}
+
+function featurePoint(feature: RoadClosureFeature): { lat: number; lng: number } | null {
+  const g = feature.geometry;
+  if (g.type === 'Point') {
+    return { lng: g.coordinates[0], lat: g.coordinates[1] };
+  }
+  if (g.type === 'LineString' && g.coordinates.length) {
+    const mid = g.coordinates[Math.floor(g.coordinates.length / 2)]!;
+    return { lng: mid[0]!, lat: mid[1]! };
+  }
+  if (g.type === 'MultiLineString' && g.coordinates[0]?.length) {
+    const line = g.coordinates[0]!;
+    const mid = line[Math.floor(line.length / 2)]!;
+    return { lng: mid[0]!, lat: mid[1]! };
+  }
+  return null;
+}
+
+export function findClosuresNear(
+  collection: RoadClosureCollection,
+  point: { lat: number; lng: number },
+  options?: { limit?: number; maxKm?: number },
+): Array<RoadClosureFeature & { distanceKm: number }> {
+  const limit = options?.limit ?? 5;
+  const maxKm = options?.maxKm ?? 50;
+  return collection.features
+    .map((f) => {
+      const p = featurePoint(f);
+      if (!p) return null;
+      return { ...f, distanceKm: haversineKm(point, p) };
+    })
+    .filter(
+      (row): row is RoadClosureFeature & { distanceKm: number } =>
+        row !== null && row.distanceKm <= maxKm,
+    )
+    .sort((a, b) => a.distanceKm - b.distanceKm)
+    .slice(0, limit);
 }
