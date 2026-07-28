@@ -379,6 +379,7 @@ export function MapApp() {
         onClose={closeFireSheet}
         favorited={selectedIsFavorite}
         onToggleFavorite={onToggleFavorite}
+        onSelectionUpdate={setSelectedFire}
         localeTag={tag}
         t={t}
         basePath={basePath}

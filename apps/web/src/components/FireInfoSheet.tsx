@@ -1,9 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { BottomSheet } from '@openfirewx/ui';
 import {
   fetchInciwebNewsForFire,
+  fetchLiveFireMatch,
   type InciwebNewsItem,
 } from '@openfirewx/fire';
 import {
@@ -114,6 +115,7 @@ export type FireInfoSheetProps = {
   onClose: () => void;
   favorited: boolean;
   onToggleFavorite: () => void;
+  onSelectionUpdate?: (payload: FireSelectPayload) => void;
   localeTag: string;
   t: (key: MessageKey, vars?: Record<string, string | number>) => string;
   basePath?: string;
@@ -124,6 +126,7 @@ export function FireInfoSheet({
   onClose,
   favorited,
   onToggleFavorite,
+  onSelectionUpdate,
   localeTag,
   t,
   basePath = '',
@@ -140,6 +143,7 @@ export function FireInfoSheet({
     'idle',
   );
   const [refreshing, setRefreshing] = useState(false);
+  const skipNewsReloadRef = useRef(false);
 
   const [nearState, setNearState] = useState<NearState>('idle');
   const [evacZones, setEvacZones] = useState<EvacZoneFeature[]>([]);
@@ -161,11 +165,35 @@ export function FireInfoSheet({
       setNewsState('loading');
       if (force) setRefreshing(true);
       try {
-        const result = await fetchInciwebNewsForFire(queryName, {
+        const newsPromise = fetchInciwebNewsForFire(queryName, {
           state: selection.properties.state,
           limit: 3,
           force,
         });
+
+        const perimeterPromise = force
+          ? fetchLiveFireMatch({
+              name: selection.properties.name,
+              state: selection.properties.state,
+              irwinId: selection.properties.irwinId,
+              uniqueFireIdentifier: selection.properties.uniqueFireIdentifier,
+              near: selection.latlng,
+            }).catch(() => null)
+          : Promise.resolve(null);
+
+        const [result, match] = await Promise.all([newsPromise, perimeterPromise]);
+
+        if (match && onSelectionUpdate) {
+          skipNewsReloadRef.current = true;
+          onSelectionUpdate({
+            latlng: selection.latlng,
+            properties: {
+              ...selection.properties,
+              ...match.properties,
+            },
+          });
+        }
+
         setNews(result.items);
         setIncidentUrl(result.incidentUrl);
         setNewsState('ready');
@@ -177,7 +205,7 @@ export function FireInfoSheet({
         setRefreshing(false);
       }
     },
-    [selection, queryName],
+    [selection, queryName, onSelectionUpdate],
   );
 
   useEffect(() => {
@@ -186,6 +214,11 @@ export function FireInfoSheet({
       setIncidentUrl(undefined);
       setNewsState('idle');
       setRefreshing(false);
+      return;
+    }
+
+    if (skipNewsReloadRef.current) {
+      skipNewsReloadRef.current = false;
       return;
     }
 
